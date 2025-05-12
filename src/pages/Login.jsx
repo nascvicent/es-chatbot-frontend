@@ -1,9 +1,13 @@
 import '../styles/Login.css';
 import logoPoli from '../assets/headermobile.png';
+import { useNavigate } from 'react-router-dom';
 
 function Login() {
+  const navigate = useNavigate();
+
   const handleGoogleLogin = () => {
     console.log("Login com Google");
+    navigate('/chat'); // Redireciona para a rota /chat
   };
 
   return (

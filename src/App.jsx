@@ -1,12 +1,13 @@
 
-import Login from './pages/Login'
+import AppRoutes from './routes/routes';
+
 
 function App() {
 
   return (
     <>
       <div>
-        <Login/>
+        <AppRoutes/>
       </div>
 
     </>
