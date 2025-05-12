@@ -11,7 +11,7 @@ function Login() {
       <div className="login-container">
         <div className="left-section">
           <img src={logoPoli} alt="Logo da UPE" className="logo" />
-          <h2 className="poppins">Bem-vindo ao Chatbot Educacional</h2>
+          <h2 className="poppins">Bem-vindo ao Chatbot Educacional POLI</h2>
           <p className="poppins">Acesse sua conta para continuar aprendendo com a gente.</p>
         </div>
 
