@@ -1,9 +1,25 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import '../styles/ChatPage.css'
 
 function App() {
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
+  const [isLightMode, setIsLightMode] = useState(false)
+
+  // Tema
+  useEffect(() => {
+    document.body.className = isLightMode ? 'light-mode' : ''
+  }, [isLightMode])
+
+  // Mensagem inicial
+  useEffect(() => {
+    setMessages([
+      {
+        sender: 'bot',
+        text: 'Como posso te ajudar?',
+      },
+    ])
+  }, [])
 
   const handleSend = () => {
     if (input.trim() === '') return
@@ -50,7 +66,10 @@ function App() {
 
   return (
     <div className="chat-page">
-      <h1 className="chat-header">Chatbot</h1>
+      <button className="theme-toggle" onClick={() => setIsLightMode((prev) => !prev)}>
+        {isLightMode ? '🌙 Modo Escuro' : '☀️ Modo Claro'}
+      </button>
+      <h1 className="chat-header">Chatbot Educacional POLI</h1>
       <div className="chat-messages">
         {messages.map((msg, index) => (
           <div
@@ -82,8 +101,7 @@ function App() {
           accept=".txt"
           onChange={handleFileUpload}
           className="file-upload-input"
-/>
-
+        />
       </div>
     </div>
   )

@@ -106,3 +106,73 @@ body {
 .file-upload-input {
   display: none;
 }
+
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  background-color: #444;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+  z-index: 1000;
+}
+
+.theme-toggle:hover {
+  background-color: #666;
+}
+
+/* Tema claro */
+body.light-mode {
+  background-color: #f5f5f5;
+}
+
+body.light-mode .chat-header {
+  color: #222;
+}
+
+body.light-mode .chat-messages {
+  background-color: #ffffff;
+  border-color: #ccc;
+}
+
+body.light-mode .message.user {
+  background-color: #007bff;
+  color: white;
+}
+
+body.light-mode .message.bot {
+  background-color: #eaeaea;
+  color: #000;
+}
+
+body.light-mode .chat-input {
+  background-color: #fff;
+  color: #000;
+  border-color: #ccc;
+}
+
+body.light-mode .file-upload-label {
+  background-color: #17a2b8;
+}
+
+body.light-mode .file-upload-label:hover {
+  background-color: #138496;
+}
+
+body.light-mode .send-button {
+  background-color: #28a745;
+}
+
+body.light-mode .send-button:hover {
+  background-color: #218838;
+}
+
+.chat-page {
+  transform: scale(1.5);
+  transform-origin: center;
+}
