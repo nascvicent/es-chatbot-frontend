@@ -1,10 +1,13 @@
 import { useState, useEffect } from 'react'
 import '../styles/ChatPage.css'
+import { useNavigate } from 'react-router-dom';
 
 function App() {
+  const navigate = useNavigate();
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [isLightMode, setIsLightMode] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
 
   // Tema
   useEffect(() => {
@@ -64,12 +67,34 @@ function App() {
     reader.readAsText(file)
   }
 
+  const handleLogout = () => {
+    alert('Você foi deslogado!')
+    navigate('/')
+  }
+
   return (
     <div className="chat-page">
       <button className="theme-toggle" onClick={() => setIsLightMode((prev) => !prev)}>
         {isLightMode ? '🌙 Modo Escuro' : '☀️ Modo Claro'}
       </button>
+
+      <div className="user-menu-wrapper">
+        <button
+          className="user-icon"
+          onClick={() => setShowUserMenu((prev) => !prev)}
+        >
+          👤
+        </button>
+        {showUserMenu && (
+          <div className="user-menu">
+            <p><strong>Usuário:</strong> João</p>
+            <button className="logout-button" onClick={handleLogout}>Sair</button>
+          </div>
+        )}
+      </div>
+
       <h1 className="chat-header">Chatbot Educacional POLI</h1>
+
       <div className="chat-messages">
         {messages.map((msg, index) => (
           <div
@@ -80,6 +105,7 @@ function App() {
           </div>
         ))}
       </div>
+
       <div className="chat-input-container">
         <input
           type="text"
@@ -93,7 +119,7 @@ function App() {
           Enviar
         </button>
         <label htmlFor="file-upload" className="file-upload-label">
-           Enviar Arquivo
+          Enviar Arquivo
         </label>
         <input
           id="file-upload"
