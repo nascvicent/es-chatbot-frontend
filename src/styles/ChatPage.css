@@ -176,3 +176,52 @@ body.light-mode .send-button:hover {
   transform: scale(1.5);
   transform-origin: center;
 }
+
+.user-menu-wrapper {
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 1000;
+}
+
+.user-icon {
+  background-color: #444;
+  color: white;
+  font-size: 1.2rem;
+  border: none;
+  padding: 0.5rem 0.75rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.user-icon:hover {
+  background-color: #666;
+}
+
+.user-menu {
+  margin-top: 0.5rem;
+  background-color: #333;
+  color: white;
+  padding: 0.75rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  min-width: 150px;
+  position: absolute;
+}
+
+.logout-button {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background-color: #d9534f;
+  color: white;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.logout-button:hover {
+  background-color: #c9302c;
+}
