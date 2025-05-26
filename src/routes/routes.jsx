@@ -6,6 +6,7 @@ import KnowledgeBasePage from '../pages/KnowledgeBasePage';
 import StatsPage from '../pages/StatsPage';
 import ExportPage from '../pages/ExportPage';
 import Dashboard from '../pages/ProfessorDashboard'; 
+import GoogleAuthCallback from '../pages/GoogleAuthCallback';
 
 function AppRoutes() {
   return (
@@ -18,6 +19,7 @@ function AppRoutes() {
         <Route path="/knowledge" element={<KnowledgeBasePage />} />
         <Route path="/stats" element={<StatsPage />} />
         <Route path="/export" element={<ExportPage />} />
+          <Route path="/google/callback" element={<GoogleAuthCallback />} />
       </Routes>
     </Router>
   );

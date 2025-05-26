@@ -1,13 +1,13 @@
 import '../styles/Login.css';
 import logoPoli from '../assets/headermobile.png';
-import { useNavigate } from 'react-router-dom';
 
 function Login() {
-  const navigate = useNavigate();
+  
+  const backendUrl = 'http://localhost:8000/auth/login'; 
 
   const handleGoogleLogin = () => {
-    console.log("Login com Google");
-    navigate('/chat'); // Redireciona para a rota /chat
+    
+    window.location.href = `${backendUrl}/`;
   };
 
   return (
@@ -22,6 +22,7 @@ function Login() {
         <div className="right-section">
           <div className="login-card">
             <h2 className="poppins">Entre com seu email institucional</h2>
+            {}
             <button className="google-btn" onClick={handleGoogleLogin}>
               <img
                 src="https://img.icons8.com/color/20/000000/google-logo.png"
