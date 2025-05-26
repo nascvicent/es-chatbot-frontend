@@ -79,6 +79,8 @@
     cursor: pointer;
     width: 100%;
     transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
+    color: black;
+    font-family: 'Poppins', sans-serif;
   }
   
   .google-btn:hover {
