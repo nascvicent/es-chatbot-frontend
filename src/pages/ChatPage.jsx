@@ -51,20 +51,27 @@ function App() {
   }
 
   const handleNewChat = () => {
-    const id = uuidv4()
-    const newChat = {
-      id,
-      title: `Chat ${Object.keys(chats).length + 1}`,
-      messages: [
-        {
-          sender: 'bot',
-          text: 'Como posso te ajudar?',
-        },
-      ],
-    }
-    setChats({ ...chats, [id]: newChat })
-    setActiveChatId(id)
+  const existingNumbers = Object.values(chats)
+    .map(chat => {
+      const match = chat.title.match(/Chat (\d+)/)
+      return match ? parseInt(match[1]) : 0
+    })
+  const max = existingNumbers.length ? Math.max(...existingNumbers) : 0
+
+  const id = uuidv4()
+  const newChat = {
+    id,
+    title: `Chat ${max + 1}`,
+    messages: [
+      {
+        sender: 'bot',
+        text: 'Como posso te ajudar?',
+      },
+    ],
   }
+  setChats({ ...chats, [id]: newChat })
+  setActiveChatId(id)
+}
 
   const handleSelectChat = (id) => {
     setActiveChatId(id)
@@ -79,22 +86,35 @@ function App() {
   }
 
   const handleDeleteChat = (id) => {
-    const confirmed = confirm('Tem certeza que deseja apagar este chat?')
-    if (confirmed) {
-      const updatedChats = { ...chats }
-      delete updatedChats[id]
-      const remainingIds = Object.keys(updatedChats)
-      setChats(updatedChats)
+  const confirmed = confirm('Tem certeza que deseja apagar este chat?')
+  if (confirmed) {
+    const updatedChats = { ...chats }
+    delete updatedChats[id]
+    const remainingIds = Object.keys(updatedChats)
+    setChats(updatedChats)
 
-      if (activeChatId === id) {
-        if (remainingIds.length > 0) {
-          setActiveChatId(remainingIds[0])
-        } else {
-          handleNewChat()
-        }
+    if (remainingIds.length > 0) {
+      setActiveChatId(remainingIds[0])
+    } else {
+      // zera os chats e cria o "Chat 1"
+      const newId = uuidv4()
+      const newChat = {
+        id: newId,
+        title: 'Chat 1',
+        messages: [
+          {
+            sender: 'bot',
+            text: 'Como posso te ajudar?',
+          },
+        ],
       }
+      const newChats = { [newId]: newChat }
+      setChats(newChats)
+      setActiveChatId(newId)
     }
   }
+}
+
 
   const handleLogout = () => {
     alert('Você foi deslogado!')
