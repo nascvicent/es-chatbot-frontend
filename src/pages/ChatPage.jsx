@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { v4 as uuidv4 } from 'uuid'
 import renameIcon from '../assets/rename.png'
 import deleteIcon from '../assets/delete.png'
+import menuIcon from '../assets/menu.png'
 
 function App() {
   const navigate = useNavigate()
@@ -12,6 +13,7 @@ function App() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [chats, setChats] = useState({})
   const [activeChatId, setActiveChatId] = useState(null)
+  const [isSidebarVisible, setIsSidebarVisible] = useState(true)
 
   useEffect(() => {
     document.body.className = isLightMode ? 'light-mode' : ''
@@ -51,27 +53,27 @@ function App() {
   }
 
   const handleNewChat = () => {
-  const existingNumbers = Object.values(chats)
-    .map(chat => {
-      const match = chat.title.match(/Chat (\d+)/)
-      return match ? parseInt(match[1]) : 0
-    })
-  const max = existingNumbers.length ? Math.max(...existingNumbers) : 0
+    const existingNumbers = Object.values(chats)
+      .map(chat => {
+        const match = chat.title.match(/Chat (\d+)/)
+        return match ? parseInt(match[1]) : 0
+      })
+    const max = existingNumbers.length ? Math.max(...existingNumbers) : 0
 
-  const id = uuidv4()
-  const newChat = {
-    id,
-    title: `Chat ${max + 1}`,
-    messages: [
-      {
-        sender: 'bot',
-        text: 'Como posso te ajudar?',
-      },
-    ],
+    const id = uuidv4()
+    const newChat = {
+      id,
+      title: `Chat ${max + 1}`,
+      messages: [
+        {
+          sender: 'bot',
+          text: 'Como posso te ajudar?',
+        },
+      ],
+    }
+    setChats({ ...chats, [id]: newChat })
+    setActiveChatId(id)
   }
-  setChats({ ...chats, [id]: newChat })
-  setActiveChatId(id)
-}
 
   const handleSelectChat = (id) => {
     setActiveChatId(id)
@@ -86,35 +88,32 @@ function App() {
   }
 
   const handleDeleteChat = (id) => {
-  const confirmed = confirm('Tem certeza que deseja apagar este chat?')
-  if (confirmed) {
-    const updatedChats = { ...chats }
-    delete updatedChats[id]
-    const remainingIds = Object.keys(updatedChats)
-    setChats(updatedChats)
+    const confirmed = confirm('Tem certeza que deseja apagar este chat?')
+    if (confirmed) {
+      const updatedChats = { ...chats }
+      delete updatedChats[id]
+      const remainingIds = Object.keys(updatedChats)
+      setChats(updatedChats)
 
-    if (remainingIds.length > 0) {
-      setActiveChatId(remainingIds[0])
-    } else {
-      // zera os chats e cria o "Chat 1"
-      const newId = uuidv4()
-      const newChat = {
-        id: newId,
-        title: 'Chat 1',
-        messages: [
-          {
-            sender: 'bot',
-            text: 'Como posso te ajudar?',
-          },
-        ],
+      if (remainingIds.length > 0) {
+        setActiveChatId(remainingIds[0])
+      } else {
+        const newId = uuidv4()
+        const newChat = {
+          id: newId,
+          title: 'Chat 1',
+          messages: [
+            {
+              sender: 'bot',
+              text: 'Como posso te ajudar?',
+            },
+          ],
+        }
+        setChats({ [newId]: newChat })
+        setActiveChatId(newId)
       }
-      const newChats = { [newId]: newChat }
-      setChats(newChats)
-      setActiveChatId(newId)
     }
   }
-}
-
 
   const handleLogout = () => {
     alert('Você foi deslogado!')
@@ -123,47 +122,55 @@ function App() {
 
   return (
     <div className="chat-page">
-      <div className="sidebar">
-        <button className="new-chat-button" onClick={handleNewChat}>+ Novo Chat</button>
+      {/* SIDEBAR */}
+      <div className={`sidebar ${isSidebarVisible ? '' : 'hidden'}`}>
+        <button className="new-chat-button" onClick={handleNewChat}>
+          + Novo Chat
+        </button>
 
         {Object.entries(chats).map(([id, chat]) => (
-  <div key={id} className="chat-entry">
-    <div
-      className={`chat-history-button ${id === activeChatId ? 'active' : ''}`}
-      onClick={() => handleSelectChat(id)}
-    >
-      {chat.title}
-    </div>
-    <div className="chat-icons">
-      <img
-  src={renameIcon}
-  alt="Renomear"
-  title="Renomear"
-  className="chat-icon"
-  onClick={() => handleRenameChat(id)}
-/>
-<img
-  src={deleteIcon}
-  alt="Excluir"
-  title="Excluir"
-  className="chat-icon"
-  onClick={() => handleDeleteChat(id)}
-/>
-
-    </div>
-  </div>
-))}
-
+          <div key={id} className="chat-entry">
+            <div
+              className={`chat-history-button ${id === activeChatId ? 'active' : ''}`}
+              onClick={() => handleSelectChat(id)}
+            >
+              {chat.title}
+            </div>
+            <div className="chat-icons">
+              <img
+                src={renameIcon}
+                alt="Renomear"
+                title="Renomear"
+                className="chat-icon"
+                onClick={() => handleRenameChat(id)}
+              />
+              <img
+                src={deleteIcon}
+                alt="Excluir"
+                title="Excluir"
+                className="chat-icon"
+                onClick={() => handleDeleteChat(id)}
+              />
+            </div>
+          </div>
+        ))}
       </div>
 
-      <button className="theme-toggle" onClick={() => setIsLightMode((prev) => !prev)}>
+      {/* TOGGLE TEMA */}
+      <button className="theme-toggle" onClick={() => setIsLightMode(prev => !prev)}>
         {isLightMode ? '🌙 Modo Escuro' : '☀️ Modo Claro'}
       </button>
 
+      {/* USUÁRIO / MENU */}
       <div className="user-menu-wrapper">
-        <button className="user-icon" onClick={() => setShowUserMenu((prev) => !prev)}>
+        <button className="user-icon" onClick={() => setShowUserMenu(prev => !prev)}>
           👤
         </button>
+
+        <button className="menu-toggle" onClick={() => setIsSidebarVisible(prev => !prev)}>
+          <img src={menuIcon} alt="Menu" className="menu-icon" />
+        </button>
+
         {showUserMenu && (
           <div className="user-menu">
             <p><strong>Usuário:</strong> João</p>
@@ -172,8 +179,10 @@ function App() {
         )}
       </div>
 
+      {/* TÍTULO */}
       <h1 className="chat-header">Chatbot Educacional POLI</h1>
 
+      {/* MENSAGENS */}
       <div className="chat-messages">
         {currentMessages.map((msg, index) => (
           <div key={index} className={`message ${msg.sender === 'user' ? 'user' : 'bot'}`}>
@@ -182,6 +191,7 @@ function App() {
         ))}
       </div>
 
+      {/* INPUT */}
       <div className="chat-input-container">
         <input
           type="text"
