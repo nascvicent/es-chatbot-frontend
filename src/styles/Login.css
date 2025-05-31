@@ -79,7 +79,7 @@
     cursor: pointer;
     width: 100%;
     transition: background-color 0.3s ease, transform 0.3s ease, box-shadow 0.3s ease;
-    color: black;
+    color: black !important;
     font-family: 'Poppins', sans-serif;
   }
   
@@ -105,4 +105,7 @@
 .poppins {
     font-family: 'Poppins', sans-serif;
   }
+.specific-text-black {
+  color: black !important; 
+}
   

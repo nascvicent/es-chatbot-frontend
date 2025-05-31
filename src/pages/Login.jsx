@@ -21,13 +21,15 @@ function Login() {
 
         <div className="right-section">
           <div className="login-card">
-            <h2 className="poppins">Entre com seu email institucional</h2>
+            <h2 className="poppins specific-text-black">Entre com seu email institucional</h2>
+            {}
+
             <button className="google-btn" onClick={handleGoogleLogin}>
               <img
                 src="https://img.icons8.com/color/20/000000/google-logo.png"
                 alt="Google"
               />
-              Entrar com Google
+              Entrar com o Google
             </button>
           </div>
         </div>
