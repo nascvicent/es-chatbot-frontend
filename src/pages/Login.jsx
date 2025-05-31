@@ -2,12 +2,12 @@ import '../styles/Login.css';
 import logoPoli from '../assets/headermobile.png';
 
 function Login() {
-  
-  const backendUrl = 'http://localhost:8000/auth/login'; 
+  // ATUALIZADO: Aponta para a URL de login da API de produção
+  const backendUrl = 'https://es-chatbot-production.up.railway.app/auth/login'; 
 
   const handleGoogleLogin = () => {
-    
-    window.location.href = `${backendUrl}/`;
+    // Redireciona para o backend para iniciar o login com Google
+    window.location.href = backendUrl;
   };
 
   return (
@@ -22,7 +22,6 @@ function Login() {
         <div className="right-section">
           <div className="login-card">
             <h2 className="poppins">Entre com seu email institucional</h2>
-            {}
             <button className="google-btn" onClick={handleGoogleLogin}>
               <img
                 src="https://img.icons8.com/color/20/000000/google-logo.png"
