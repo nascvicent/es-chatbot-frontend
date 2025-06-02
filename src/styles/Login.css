@@ -2,7 +2,7 @@
 body {
  
   background-color:  #283030; /* Cor de fundo base */
-  background-image: url('https://www.transparenttextures.com/patterns/black-orchid.png');
+  /*background-image: url('https://www.transparenttextures.com/patterns/black-orchid.png');*/
   background-repeat: repeat;
   margin: 0;
 }
