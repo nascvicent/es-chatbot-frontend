@@ -9,6 +9,7 @@ import StatsPage from '../pages/StatsPage';
 import ExportPage from '../pages/ExportPage';
 import Dashboard from '../pages/ProfessorDashboard'; 
 import GoogleAuthCallback from '../pages/GoogleAuthCallback';
+import PrivateRoute from '../pages/PrivateRoute';
 
 function AnimatedRoutes() {
   const location = useLocation();
@@ -17,7 +18,9 @@ function AnimatedRoutes() {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<LoginPage />} />
-        <Route path="/chat" element={<ChatPage />} />
+        <Route path="/chat" element={ <PrivateRoute>
+            <ChatPage />
+          </PrivateRoute>} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/faq" element={<FAQPage />} />
         <Route path="/knowledge" element={<KnowledgeBasePage />} />
