@@ -6,7 +6,7 @@ import renameIcon from '../assets/rename.png'; // Ensure these paths are correct
 import deleteIcon from '../assets/delete.png';
 import menuIcon from '../assets/menu.png';
 
-function App() {
+function ChatPage() {
   const navigate = useNavigate();
   const [input, setInput] = useState('');
   const [isLightMode, setIsLightMode] = useState(false);
@@ -254,4 +254,4 @@ function App() {
   );
 }
 
-export default App;
+export default ChatPage;
