@@ -6,39 +6,42 @@ function GoogleAuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // ATUALIZADO: pega o valor do parâmetro 'user' (enviado pelo backend)
     const base64Payload = searchParams.get('user');
 
     if (base64Payload) {
       try {
-        // 1. Decodifica de Base64 para string
         const jsonString = atob(base64Payload);
-        // 2. Converte a string JSON para objeto JavaScript
         const tokenData = JSON.parse(jsonString);
 
-        console.log("Dados decodificados:", tokenData);
+        console.log("Dados decodificados do backend:", tokenData); // Ótimo para depurar
 
-        const accessToken = tokenData.access_token;
-        const refreshToken = tokenData.refresh_token;
+        // ATUALIZAÇÃO CRÍTICA AQUI: Use o id_token como o accessToken para sua API
+        const apiAccessToken = tokenData.id_token; // <<< MUDANÇA AQUI
+        const googleRefreshToken = tokenData.refresh_token; // Este é o refresh token do Google
 
-        if (accessToken) {
-          localStorage.setItem('accessToken', accessToken);
-          if (refreshToken) {
-            localStorage.setItem('refreshToken', refreshToken);
+        if (apiAccessToken) {
+          localStorage.setItem('accessToken', apiAccessToken); // Salva o id_token como 'accessToken'
+          if (googleRefreshToken) {
+            // Você pode querer salvar o refresh_token do Google também,
+            // mas sua utilidade dependerá de como o backend lida com a renovação de sessão.
+            // Por agora, vamos focar no id_token.
+            localStorage.setItem('googleRefreshToken', googleRefreshToken); // Nomeie claramente se for salvá-lo
+            console.log("id_token (como accessToken) e googleRefreshToken salvos.");
+          } else {
+            console.log("id_token (como accessToken) salvo. Nenhum googleRefreshToken encontrado.");
           }
-          console.log("Tokens salvos no localStorage a partir do Base64");
-          navigate('/chat'); // redireciona após login bem-sucedido
+          navigate('/chat');
         } else {
-          console.error("Access token não encontrado no payload decodificado.");
-          navigate('/login');
+          console.error("id_token não encontrado no payload decodificado do backend.");
+          navigate('/login'); // ou para uma página de erro
         }
       } catch (error) {
-        console.error("Erro ao decodificar ou processar o payload Base64:", error);
-        navigate('/login');
+        console.error("Erro ao decodificar ou processar o payload Base64 do backend:", error);
+        navigate('/login'); // ou para uma página de erro
       }
     } else {
       console.error("Nenhum payload Base64 encontrado na URL (parâmetro 'user' ausente).");
-      navigate('/login');
+      navigate('/login'); // ou para uma página de erro
     }
   }, [searchParams, navigate]);
 
