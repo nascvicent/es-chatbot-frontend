@@ -1,7 +1,7 @@
 /* Reset and Base Styles */
 body {
   margin: 0;
-  
+  font-family: 'Roboto', 'Arial', sans-serif; /* Adicionado do código 2 */
   height: 100vh;
   overflow: hidden;
 }
@@ -24,25 +24,50 @@ body {
 /* Sidebar */
 .sidebar {
   width: 260px;
-  background-color: #333538 !important;
+  background-color: #333538 !important; /* Original do código 1, mantido !important */
   padding: 12px;
   display: flex;
   flex-direction: column;
-  transition: width 0.3s ease, padding 0.3s ease;
+  transition: width 0.5s ease, padding 0.3s ease; /* Transição de largura ajustada para 0.5s para suavizar */
   overflow-y: auto;
   box-sizing: border-box;
   flex-shrink: 0;
+  position: relative; /* Adicionado para contexto de z-index se necessário e para overflow */
 }
 
 .sidebar.collapsed {
   width: 0;
   padding: 12px 0;
-  overflow: hidden;
+  overflow: hidden; /* Garante que o conteúdo seja cortado quando a sidebar está colapsada */
 }
 
 .light-mode .sidebar {
-  background-color: #f0f4f9;
+  background-color: #f0f4f9 !important; /* ADICIONADO !important AQUI para corrigir a cor no modo claro */
   border-right: 1px solid #dadce0;
+}
+
+/* Estilos para os filhos diretos da sidebar que precisam animar (ADICIONADO DO CÓDIGO 2) */
+.sidebar-header,
+.new-chat-button,
+.chat-history-list,
+.sidebar-footer {
+  opacity: 1;
+  visibility: visible;
+  /* Transição para quando a sidebar está EXPANDINDO */
+  transition: opacity 0.2s ease-in-out 0.3s, visibility 0s linear 0.3s;
+  overflow: hidden; /* Ajuda a conter o conteúdo durante a transição */
+  white-space: nowrap; /* Impede que o texto quebre linha durante a animação */
+}
+
+/* Estilos para os filhos quando a sidebar está COLAPSADA (ADICIONADO DO CÓDIGO 2) */
+.sidebar.collapsed .sidebar-header,
+.sidebar.collapsed .new-chat-button,
+.sidebar.collapsed .chat-history-list,
+.sidebar.collapsed .sidebar-footer {
+  opacity: 0;
+  visibility: hidden;
+  /* Transição para quando a sidebar está COLAPSANDO */
+  transition: opacity 0.05s ease-in-out, visibility 0s linear 0.05s;
 }
 
 .sidebar-header {
@@ -51,6 +76,7 @@ body {
   padding: 8px 12px 16px 12px;
   color: #e8eaed;
   flex-shrink: 0;
+  text-overflow: ellipsis; /* Adicionado para garantir o corte de texto */
 }
 
 .light-mode .sidebar-header {
@@ -280,8 +306,9 @@ body {
 }
 
 .user-icon-header {
-  background-color: #353638;
-  color: white;
+  /* MODIFICADO: background original era #353638, agora como o theme-toggle */
+  background: none;
+  color: white; /* Mantenha ou ajuste a cor do ícone conforme necessário */
   font-size: 1rem;
   border: none;
   width: 38px;
@@ -294,14 +321,17 @@ body {
   transition: background-color 0.2s;
 }
 .user-icon-header:hover {
-  background-color: #4a4b4d;
+  /* MODIFICADO: background-color original era #4a4b4d, agora como o theme-toggle */
+  background-color: rgba(255, 255, 255, 0.1);
 }
 .light-mode .user-icon-header {
-  background-color: #e8f0fe;
-  color: #1967d2;
+  /* MODIFICADO: background-color original era #e8f0fe, agora como o theme-toggle */
+  background: none;
+  color: #1967d2; /* Mantenha ou ajuste a cor do ícone conforme necessário para o modo claro */
 }
 .light-mode .user-icon-header:hover {
-  background-color: #d2e3fc;
+  /* MODIFICADO: background-color original era #d2e3fc, agora como o theme-toggle */
+  background-color: rgba(0, 0, 0, 0.05);
 }
 
 .user-menu-header {
@@ -361,7 +391,7 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   margin: 0 auto;
-  width: 1870px;
+  width: 1870px; /* Considere usar max-width e width: 100% para responsividade */
   box-sizing: border-box;
 }
 
@@ -387,12 +417,25 @@ body {
 .light-mode .greeting-submessage {
   color: #70757a;
 }
+@keyframes fadeInMessages {
+  from {
+    opacity: 0;
+    transform: translateY(10px); /* Opcional: leve subida */
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
 
 .chat-messages {
+  /* Seus estilos existentes para .chat-messages */
   display: flex;
   flex-direction: column;
   gap: 16px;
   width: 100%;
+  /* Adicione a animação */
+  animation: fadeInMessages 0.4s ease-out forwards;
 }
 
 .message {
@@ -571,7 +614,7 @@ body {
   -webkit-text-fill-color: transparent;
   
   /* CORREÇÃO: A propriedade 'animation' agora está declarada apenas uma vez,
-     com as duas animações separadas por vírgula. */
+    com as duas animações separadas por vírgula. */
   animation:
     fadeInUp 0.5s ease-out both;
 }
