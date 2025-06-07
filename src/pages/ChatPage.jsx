@@ -7,8 +7,8 @@ import deleteIcon from '../assets/delete.png';
 import menuIcon from '../assets/menu.png';
 
 // Constantes para a animação de digitação
-const INITIAL_TYPING_DELAY_MS = 20;
-const ACCELERATED_TYPING_DELAY_MS = 10;
+const INITIAL_TYPING_DELAY_MS = 2;
+const ACCELERATED_TYPING_DELAY_MS = 2;
 const ACCELERATION_THRESHOLD_CHARS = 80;
 
 // URL base da API

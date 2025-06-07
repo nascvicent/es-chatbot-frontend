@@ -444,13 +444,15 @@ body {
   word-wrap: break-word;
   max-width: 80%;
   line-height: 1.5;
-  font-size: 0.95rem;
+  font-size: 1rem;
+  font-family: "Poppins", sans-serif;
 }
 
 .message.user {
   background-color: #3c4755;
   color: #e8eaed;
   margin-left: auto;
+  font-size: 1rem;
   border-bottom-right-radius: 4px;
 }
 .light-mode .message.user {
@@ -487,6 +489,7 @@ body {
   padding: 10px 10px 10px 22px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   border: 1px solid #3c4043;
+  
 }
 .light-mode .chat-input-container {
   background-color: #f0f4f9;
@@ -498,7 +501,6 @@ body {
   background-color: transparent;
   border: none;
   color: #e8eaed;
-  font-size: 1rem;
   resize: none;
   overflow-y: auto;
   max-height: 150px;
