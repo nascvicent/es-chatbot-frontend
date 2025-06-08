@@ -56,9 +56,9 @@ function GoogleAuthCallback() {
               const userRole = userData.role;
               localStorage.setItem('userRole', userRole);
 
-              if (userRole === 'admin') {
+              if (userRole === 'admin' || userRole === 'user') {
                 navigate('/dashboard');
-              } else if (userRole === 'user') {
+              } else if (userRole === '') {
                 navigate('/chat');
               } else {
                 console.warn("Role do usuário desconhecido:", userRole);
