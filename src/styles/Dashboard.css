@@ -126,8 +126,9 @@ body.light .profile-pic {
     background: none;
     border: 1px solid var(--border-color);
     color: var(--text-secondary);
-    width: 65%
-    
+    width: 65%;
+    aspect-ratio: 1 / 1; /* Garante que a altura será igual à largura */
+
     border-radius: 50%;
     cursor: pointer;
     display: flex;
