@@ -6,9 +6,12 @@ import renameIcon from '../assets/rename.png';
 import deleteIcon from '../assets/delete.png';
 import menuIcon from '../assets/menu.png';
 
+
 // --- Constantes ---
 const INITIAL_TYPING_DELAY_MS = 5;
 const ACCELERATED_TYPING_DELAY_MS = 5;
+
+
 const ACCELERATION_THRESHOLD_CHARS = 80;
 const API_BASE_URL = 'https://es-chatbot-production.up.railway.app';
 const SIDEBAR_ANIMATION_DELAY = 300;
