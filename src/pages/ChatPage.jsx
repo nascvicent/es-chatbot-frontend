@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react'; // Adicionado useCallback
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import '../styles/ChatPage.css';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -6,14 +6,21 @@ import renameIcon from '../assets/rename.png';
 import deleteIcon from '../assets/delete.png';
 import menuIcon from '../assets/menu.png';
 
-// Constantes para a animação de digitação
-const INITIAL_TYPING_DELAY_MS = 20;
-const ACCELERATED_TYPING_DELAY_MS = 10;
+// --- Constantes ---
+const INITIAL_TYPING_DELAY_MS = 5;
+const ACCELERATED_TYPING_DELAY_MS = 5;
 const ACCELERATION_THRESHOLD_CHARS = 80;
-
-// URL base da API
 const API_BASE_URL = 'https://es-chatbot-production.up.railway.app';
 const SIDEBAR_ANIMATION_DELAY = 300;
+
+// --- Funções Auxiliares Estáveis ---
+const mapBackendMessagesToFrontend = (backendMessages = []) => {
+  return backendMessages.map(msg => ({
+    id: uuidv4(),
+    text: msg.content,
+    sender: msg.role === 'user' ? 'user' : 'bot',
+  }));
+};
 
 function ChatPage() {
   const navigate = useNavigate();
@@ -24,224 +31,221 @@ function ChatPage() {
   const [activeChatId, setActiveChatId] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [hasLoadedInitialChats, setHasLoadedInitialChats] = useState(false); // Novo estado
+  const [isProcessingChatAction, setIsProcessingChatAction] = useState(false);
+  const [hasLoadedInitialChats, setHasLoadedInitialChats] = useState(false);
 
-  const userName = "marsim";
+  const userName = "Márcio";
   const chatMessagesEndRef = useRef(null);
 
+  // --- Efeitos ---
   const scrollToBottom = () => {
     chatMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [chats[activeChatId]?.messages]);
+  useEffect(() => { scrollToBottom(); }, [chats[activeChatId]?.messages]);
+  useEffect(() => { document.body.className = isLightMode ? 'light-mode' : 'dark-mode'; }, [isLightMode]);
 
-  useEffect(() => {
-    document.body.className = isLightMode ? 'light-mode' : 'dark-mode';
-  }, [isLightMode]);
+  // handleNewChat agora apenas cria o chat LOCALMENTE. A persistência acontece no primeiro handleSend.
+  const handleNewChat = useCallback(async (isInitial = false, suppressSidebarClose = false) => {
+    if (isProcessingChatAction) return;
 
-  // useEffect para Carregamento Inicial de Chats
-  useEffect(() => {
-    const accessToken = localStorage.getItem('accessToken');
-    if (!accessToken) {
-      navigate('/', { replace: true });
-      return;
+    if (!suppressSidebarClose && isSidebarVisible) {
+      setIsSidebarVisible(false);
+      await new Promise(resolve => setTimeout(resolve, SIDEBAR_ANIMATION_DELAY));
     }
-    const savedChats = JSON.parse(localStorage.getItem('chats')) || {};
-    setChats(savedChats); // Define os chats do localStorage
 
-    const chatIds = Object.keys(savedChats);
-    if (chatIds.length > 0) {
-      const lastActiveChatId = localStorage.getItem('lastActiveChatId');
-      if (lastActiveChatId && savedChats[lastActiveChatId]) {
-        setActiveChatId(lastActiveChatId);
-      } else {
-        setActiveChatId(chatIds[0]);
+    const newChatFrontendId = `local_${uuidv4()}`; // ID temporário para chats não salvos
+    setChats(prevChats => {
+      const existingNumbers = Object.values(prevChats).map(chat => { const match = chat.title.match(/Chat (\d+)/); return match ? parseInt(match[1], 10) : 0; }).filter(num => num > 0);
+      const nextNumber = existingNumbers.length > 0 ? Math.max(0, ...existingNumbers) + 1 : 1;
+      const newChatTitle = `Chat ${nextNumber}`;
+
+      const newChatData = {
+        id: newChatFrontendId,
+        title: newChatTitle,
+        messages: [],
+        userHasTyped: false,
+        backendId: null, // O chat começa sem backendId
+        createdAt: new Date().toISOString(),
+      };
+      return { ...prevChats, [newChatFrontendId]: newChatData };
+    });
+    setActiveChatId(newChatFrontendId);
+  }, [isProcessingChatAction, isSidebarVisible]);
+
+  // Carregamento Inicial de Chats do Backend
+  useEffect(() => {
+    const fetchChats = async () => {
+      setIsProcessingChatAction(true);
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) { navigate('/', { replace: true }); return; }
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/chat-history`, {
+          headers: { 'Authorization': `Bearer ${accessToken}` },
+        });
+
+        if (response.ok) {
+          const serverChatsArray = await response.json();
+          const chatsMap = serverChatsArray.reduce((acc, chat) => {
+            const id = chat.id.toString(); // Usa o ID do backend como chave principal
+            acc[id] = {
+              id: id,
+              backendId: chat.id,
+              title: `Chat ${chat.id}`, // Garante um título consistente com o ID do backend
+              messages: mapBackendMessagesToFrontend(chat.chat_messages?.messages || []),
+              userHasTyped: (chat.chat_messages?.messages || []).some(m => m.role === 'user'),
+              createdAt: chat.created_at,
+            };
+            return acc;
+          }, {});
+          
+          setChats(chatsMap);
+          const chatIds = Object.keys(chatsMap);
+          if (chatIds.length > 0) {
+            const lastActiveChatId = localStorage.getItem('lastActiveChatId');
+            if (lastActiveChatId && chatsMap[lastActiveChatId]) {
+              setActiveChatId(lastActiveChatId);
+            } else {
+              const sortedChats = Object.values(chatsMap).sort((a,b) => Date.parse(b.createdAt) - Date.parse(a.createdAt));
+              setActiveChatId(sortedChats[0].id);
+            }
+          } else {
+            setActiveChatId(null);
+          }
+        } else { throw new Error('Falha ao carregar histórico de chats.'); }
+      } catch (error) {
+        console.error("Erro ao carregar chats, usando localStorage como fallback:", error);
+        const savedChats = JSON.parse(localStorage.getItem('chats')) || {};
+        setChats(savedChats);
+      } finally {
+        setHasLoadedInitialChats(true);
+        setIsProcessingChatAction(false);
       }
-    } else {
-      setActiveChatId(null); // Nenhum chat, nenhum ativo inicialmente
-    }
-    setHasLoadedInitialChats(true); // Sinaliza que o carregamento inicial e a configuração terminaram
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigate]); // Roda apenas uma vez na montagem (assumindo que navigate é estável)
+    };
 
-  // useEffect para persistir 'chats' no localStorage
+    fetchChats();
+  }, [navigate]);
+
+  // Persistência no localStorage (funciona como um cache/backup)
   useEffect(() => {
-    // Só salva no localStorage se o carregamento inicial já ocorreu,
-    // para evitar sobrescrever o localStorage com um estado vazio antes de carregar.
-    if (hasLoadedInitialChats) {
-      localStorage.setItem('chats', JSON.stringify(chats));
-    }
+    if (hasLoadedInitialChats) { localStorage.setItem('chats', JSON.stringify(chats)); }
   }, [chats, hasLoadedInitialChats]);
 
-  // useEffect para persistir 'lastActiveChatId'
   useEffect(() => {
-    if (activeChatId) {
-      localStorage.setItem('lastActiveChatId', activeChatId);
-    }
-    // Opcional: se não houver activeChatId após o carregamento inicial, limpar do localStorage
-    // else if (hasLoadedInitialChats && Object.keys(chats).length === 0) {
-    //   localStorage.removeItem('lastActiveChatId');
-    // }
-  }, [activeChatId, hasLoadedInitialChats]); // Adicionado hasLoadedInitialChats como dependencia
+    if (activeChatId) { localStorage.setItem('lastActiveChatId', activeChatId); }
+  }, [activeChatId]);
 
-  const currentMessages = chats[activeChatId]?.messages || [];
-
-  // handleNewChat memoizado
-  const handleNewChat = useCallback(async (isInitial = false, suppressSidebarClose = false) => {
-    if (!suppressSidebarClose && isSidebarVisible) {
-        setIsSidebarVisible(false);
-        await new Promise(resolve => setTimeout(resolve, SIDEBAR_ANIMATION_DELAY));
-    }
-
-    const newChatId = uuidv4(); // Gera ID fora para usar em setActiveChatId
-
-    
-    setChats(prevChats => {
-        // Calcula nextNumber usando prevChats para não precisar de 'chats' como dependência do useCallback
-        const existingNumbers = Object.values(prevChats)
-            .map(chat => {
-                const match = chat.title.match(/Chat (\d+)/);
-                return match ? parseInt(match[1], 10) : 0;
-            })
-            .filter(num => num > 0);
-        const nextNumber = existingNumbers.length > 0 ? Math.max(0, ...existingNumbers) + 1 : 1;
-        const newChatTitle = `Chat ${nextNumber}`;
-
-        const newChatData = {
-            id: newChatId,
-            title: newChatTitle,
-            messages: [], // Sempre começa com mensagens vazias para mostrar a saudação
-            userHasTyped: false,
-            // backendId: null // Se você estiver usando backendId, inicialize aqui
-        };
-        // Define o novo chat como ativo imediatamente APÓS esta atualização de estado
-        // setActiveChatId é chamado fora deste callback do setChats
-        return { ...prevChats, [newChatId]: newChatData };
-    });
-    setActiveChatId(newChatId); // Define o ID do novo chat como ativo
-  }, [isSidebarVisible, setIsSidebarVisible, setChats, setActiveChatId]); // Dependências do useCallback
-
-  // useEffect para criar um novo chat se a lista estiver vazia APÓS o carregamento inicial
+  // Cria um novo chat se a lista estiver vazia após o carregamento inicial
   useEffect(() => {
-    if (hasLoadedInitialChats && Object.keys(chats).length === 0) {
-      // Verifica também se não há um activeChatId para evitar criar chat se um já está sendo criado
-      if (!activeChatId) {
-          console.log("useEffect: Nenhum chat. Criando novo chat inicial.");
-          handleNewChat(true, true); // isInitial = true, suppressSidebarClose = true
-      }
+    if (hasLoadedInitialChats && Object.keys(chats).length === 0 && !isProcessingChatAction) {
+      handleNewChat(true, true);
     }
-  }, [chats, activeChatId, hasLoadedInitialChats, handleNewChat]);
+  }, [chats, hasLoadedInitialChats, handleNewChat, isProcessingChatAction]);
 
 
   const handleSend = async () => {
-    if (input.trim() === '' || !activeChatId) return;
+    if (input.trim() === '' || !activeChatId || !chats[activeChatId]) return;
+    
     const userMessage = { sender: 'user', text: input, id: uuidv4() };
     const currentInputForAPI = input;
     setInput('');
     const botMessageId = uuidv4();
-    let charactersTypedForCurrentBotResponse = 0;
+    const currentChat = chats[activeChatId];
+    const isNewChat = !currentChat.backendId;
 
-    setChats(prevChats => {
-      const currentActiveChat = prevChats[activeChatId];
-      return {
-        ...prevChats,
-        [activeChatId]: {
-          ...(currentActiveChat || { messages: [], title: 'Chat' }),
-          messages: [
-            ...(currentActiveChat?.messages || []),
-            userMessage,
-            { sender: 'bot', text: '', id: botMessageId }
-          ],
-          userHasTyped: true,
-        }
-      };
-    });
+    setChats(prev => ({
+      ...prev,
+      [activeChatId]: { ...prev[activeChatId], messages: [...prev[activeChatId].messages, userMessage, { sender: 'bot', text: '', id: botMessageId }], userHasTyped: true }
+    }));
+
     setIsLoading(true);
     try {
       const accessToken = localStorage.getItem('accessToken');
-      if (!accessToken) {
-        alert('Sua sessão expirou. Por favor, faça login novamente.');
-        navigate('/', { replace: true });
-        setIsLoading(false); return;
-      }
-      const response = await fetch(`${API_BASE_URL}/llm/generate`, {
+      if (!accessToken) throw new Error('Sessão expirou.');
+
+      const payload = {
+        message: currentInputForAPI,
+        chat_history_id: currentChat.backendId,
+      };
+      
+      const response = await fetch(`${API_BASE_URL}/chat`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'text/event-stream',
-          'Authorization': `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ message: currentInputForAPI }),
+        headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'Authorization': `Bearer ${accessToken}` },
+        body: JSON.stringify(payload),
       });
+
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ detail: `Erro ${response.status} do servidor.` }));
-        console.error('Erro da API:', response.status, errorData);
-        if (response.status === 401 || response.status === 403) {
-          alert('Sua sessão expirou. Por favor, faça login novamente.');
-          localStorage.removeItem('accessToken');
-          navigate('/', { replace: true });
-        }
-        setChats(prevChats => {
-          const activeChat = prevChats[activeChatId];
-          if (!activeChat) return prevChats;
-          const updatedMessages = activeChat.messages.map(msg =>
-            msg.id === botMessageId ? { ...msg, text: `Erro: ${errorData.detail || response.statusText}` } : msg
-          );
-          return { ...prevChats, [activeChatId]: { ...activeChat, messages: updatedMessages }};
-        });
-        setIsLoading(false); return;
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.detail || `Erro do servidor: ${response.statusText}`);
       }
+      
+      if (isNewChat) {
+        const newBackendIdHeader = response.headers.get('X-Chat-History-ID'); // <<-- CONFIRME ESTE NOME COM O BACKEND
+        if (newBackendIdHeader) {
+          const newBackendId = parseInt(newBackendIdHeader, 10);
+          const newBackendIdStr = newBackendId.toString();
+
+          setChats(prev => {
+            const tempChat = prev[activeChatId];
+            if (!tempChat) return prev;
+            const newState = {...prev};
+            delete newState[activeChatId]; // Remove o chat com ID temporário
+            
+            const finalChat = {
+              ...tempChat,
+              id: newBackendIdStr, // Atualiza o ID principal para o do backend
+              backendId: newBackendId,
+              title: `Chat ${newBackendId}` // Atualiza o título com o ID real
+            };
+            newState[finalChat.id] = finalChat;
+
+            // Transfere o placeholder da mensagem do bot para o chat finalizado
+            const botMessagePlaceholder = tempChat.messages.find(m => m.id === botMessageId);
+            if(botMessagePlaceholder) {
+                finalChat.messages = [userMessage, botMessagePlaceholder];
+            }
+            
+            setActiveChatId(finalChat.id); // Ativa o novo chat com o ID correto
+            return newState;
+          });
+        }
+      }
+
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
       let streamDone = false;
-      let shouldCancelStreaming = false;
-      const cancelStreaming = () => {
-        shouldCancelStreaming = true;
-        if (reader && typeof reader.cancel === 'function') {
-          reader.cancel().catch(e => console.warn("Erro ao cancelar reader:", e));
-        }
-      };
-      while (!streamDone && !shouldCancelStreaming) {
-        const { value, done: readerDone } = await reader.read();
-        streamDone = readerDone;
-        if (shouldCancelStreaming) break;
-        if (value) {
-          const chunk = decoder.decode(value, { stream: true });
-          for (let i = 0; i < chunk.length; i++) {
-            if (shouldCancelStreaming) break;
-            const char = chunk[i];
-            setChats(prevChats => {
-              const activeChat = prevChats[activeChatId];
-              if (!activeChat || !activeChat.messages.find(m => m.id === botMessageId)) {
-                console.warn("Chat ou mensagem do bot não encontrada, interrompendo.");
-                cancelStreaming(); return prevChats;
-              }
-              const updatedMessages = activeChat.messages.map(msg =>
-                msg.id === botMessageId ? { ...msg, text: msg.text + char } : msg
-              );
-              return { ...prevChats, [activeChatId]: { ...activeChat, messages: updatedMessages }};
-            });
-            charactersTypedForCurrentBotResponse++;
-            const currentDelay = charactersTypedForCurrentBotResponse > ACCELERATION_THRESHOLD_CHARS ?
-                                 ACCELERATED_TYPING_DELAY_MS :
-                                 INITIAL_TYPING_DELAY_MS;
-            if (!shouldCancelStreaming) {
-              await new Promise(resolve => setTimeout(resolve, currentDelay));
-            }
-          }
+      while (!streamDone) {
+        const { value, done } = await reader.read();
+        if (done) { streamDone = true; break; }
+        const chunk = decoder.decode(value, { stream: true });
+        for (let i = 0; i < chunk.length; i++) {
+          const char = chunk[i];
+          setChats(prev => {
+            // Usa o ID ativo mais recente, que pode ter sido atualizado se for um novo chat
+            const currentActiveId = activeChatId; 
+            if (!prev[currentActiveId]?.messages.find(m => m.id === botMessageId)) return prev;
+
+            const updatedMessages = prev[currentActiveId].messages.map(msg =>
+              msg.id === botMessageId ? { ...msg, text: msg.text + char } : msg
+            );
+            return { ...prev, [currentActiveId]: { ...prev[currentActiveId], messages: updatedMessages }};
+          });
+          // Lógica de delay
+          const currentLength = (chats[activeChatId]?.messages.find(m => m.id === botMessageId)?.text.length || 0) + 1;
+          const delay = currentLength > ACCELERATION_THRESHOLD_CHARS ? ACCELERATED_TYPING_DELAY_MS : INITIAL_TYPING_DELAY_MS;
+          await new Promise(resolve => setTimeout(resolve, delay));
         }
       }
-      if (shouldCancelStreaming) console.log("Streaming cancelado.");
     } catch (error) {
-      console.error('Falha no fetch/stream:', error);
-      setChats(prevChats => { /* ... tratamento de erro ... */ });
+      console.error('Falha na comunicação com o chat:', error);
+      alert(`Erro: ${error.message}`);
+      if (error.message.includes("401")) navigate('/', { replace: true });
     } finally {
       setIsLoading(false);
     }
   };
-
+  
   const processSendMessage = async () => {
     if (input.trim() === '' || !activeChatId) return;
     if (isSidebarVisible) {
@@ -252,10 +256,7 @@ function ChatPage() {
   };
 
   const handleKeyPress = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      processSendMessage();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); processSendMessage(); }
   };
 
   const handleSelectChat = async (id) => {
@@ -267,180 +268,98 @@ function ChatPage() {
     setActiveChatId(id);
   };
 
+  const handleRenameChat = async (id) => {
+    const chatToRename = chats[id];
+    if (!chatToRename) return;
 
-  const handleRenameChat = (id) => {
+    const oldTitle = chatToRename.title;
+    const newTitlePrompt = prompt('Digite o novo nome do chat:', oldTitle);
 
-    const currentTitle = chats[id]?.title || '';
+    if (newTitlePrompt && newTitlePrompt.trim() !== '' && newTitlePrompt.trim() !== oldTitle) {
+      const newTitle = newTitlePrompt.trim();
+      setChats(prev => ({ ...prev, [id]: { ...prev[id], title: newTitle } }));
 
-    const newTitle = prompt('Digite o novo nome do chat:', currentTitle);
-
-    if (newTitle && newTitle.trim() !== '' && newTitle.trim() !== currentTitle) {
-
-      const updatedChat = { ...chats[id], title: newTitle.trim() };
-
-      setChats(prevChats => ({ ...prevChats, [id]: updatedChat }));
-
+      if (chatToRename.backendId) {
+        console.warn("TODO: Implementar chamada PUT para renomear chat no backend para chatId:", chatToRename.backendId);
+      }
     }
-
   };
-
-  // Esta função deve estar dentro do seu componente ChatPage
-
-const handleDeleteChat = async (idToDelete) => {
-    console.log("handleDeleteChat chamada com idToDelete:", idToDelete); // DEBUG
+  
+  const handleDeleteChat = async (idToDelete) => {
+    const chatToDelete = chats[idToDelete];
+    if (!chatToDelete) { console.error("Chat não encontrado:", idToDelete); return; }
     
-    const chatToDelete = chats[idToDelete]; // idToDelete é o UUID do frontend
+    const confirmed = window.confirm(`Tem certeza que deseja apagar o chat "${chatToDelete.title || 'sem título'}"?`);
+    if (!confirmed) return;
 
-    if (!chatToDelete) {
-        console.error("Chat não encontrado para exclusão local:", idToDelete);
-        return;
-    }
-
-    
-    // Confirmação com o usuário
-    const confirmed = window.confirm(`Tem certeza que deseja apagar o chat "${chatToDelete.title || 'sem título'}"? Esta ação não pode ser desfeita.`);
-    if (!confirmed) {
-        return;
-    }
-
-    // Se a sidebar estiver aberta, feche-a ANTES de qualquer coisa e espere a animação
     if (isSidebarVisible) {
         setIsSidebarVisible(false);
         await new Promise(resolve => setTimeout(resolve, SIDEBAR_ANIMATION_DELAY));
     }
 
-    const backendChatId = chatToDelete.backendId; // Pega o ID numérico do backend
-
-    // Caso 1: Chat existe apenas localmente (não tem backendId)
-    if (backendChatId === undefined || backendChatId === null) {
-        console.warn("Este chat não parece estar salvo no servidor (sem backendId). Removendo apenas localmente.");
-        setChats(prevChats => {
-            const updatedChats = { ...prevChats };
-            delete updatedChats[idToDelete];
-
-            const remainingKeys = Object.keys(updatedChats);
-            let newActiveId = activeChatId;
-
-            if (activeChatId === idToDelete) { // Se o chat ativo foi deletado
-                newActiveId = remainingKeys.length > 0 ? remainingKeys[0] : null;
-            } else if (remainingKeys.length === 0) { // Se a lista ficou vazia (e o ativo não era este)
-                newActiveId = null;
-            } else if (!updatedChats[activeChatId] && remainingKeys.length > 0 ) { // Se o ID ativo se tornou inválido e há outros chats
-                newActiveId = remainingKeys[0];
-            }
-            // Se activeChatId não era idToDelete e ainda é válido, ele permanece.
-
-            setActiveChatId(newActiveId);
-            // O useEffect que observa 'chats' e 'hasLoadedInitialChats' cuidará de
-            // criar um novo chat automaticamente se newActiveId for null e remainingKeys.length for 0.
-            return updatedChats;
-        });
-        return;
+    const backendChatId = chatToDelete.backendId;
+    // Se não tiver backendId, apenas deleta localmente
+    if (!backendChatId) {
+      setChats(prev => {
+        const updatedChats = { ...prev };
+        delete updatedChats[idToDelete];
+        if (activeChatId === idToDelete) { setActiveChatId(Object.keys(updatedChats).length > 0 ? Object.keys(updatedChats)[0] : null); }
+        return updatedChats;
+      });
+      return;
     }
 
-    // Caso 2: Chat tem backendId, prossegue com a deleção no servidor
-    setIsLoading(true);
+    setIsProcessingChatAction(true);
     try {
-        const accessToken = localStorage.getItem('accessToken');
-        if (!accessToken) {
-            alert('Sua sessão expirou. Por favor, faça login novamente.');
-            navigate('/', { replace: true });
-            setIsLoading(false);
-            return;
-        }
+      const accessToken = localStorage.getItem('accessToken');
+      if (!accessToken) throw new Error("Sessão expirou.");
+      const response = await fetch(`${API_BASE_URL}/chat-history/${backendChatId}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${accessToken}` },
+      });
 
-        const response = await fetch(`${API_BASE_URL}/chat-history/${backendChatId}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${accessToken}`,
-            },
+      if (response.ok) { // 204 No Content
+        setChats(prev => {
+          const updatedChats = { ...prev };
+          delete updatedChats[idToDelete];
+          if (activeChatId === idToDelete) { setActiveChatId(Object.keys(updatedChats).length > 0 ? Object.keys(updatedChats)[0] : null); }
+          return updatedChats;
         });
-
-        if (response.ok) { // Geralmente 204 No Content para DELETE bem-sucedido
-            console.log(`Chat com backendId ${backendChatId} (frontendId: ${idToDelete}) deletado com sucesso no servidor.`);
-            // Atualiza o estado local APÓS o sucesso no backend
-            setChats(prevChats => {
-                const updatedChats = { ...prevChats };
-                delete updatedChats[idToDelete]; // Usa o idToDelete (UUID do frontend)
-
-                const remainingKeys = Object.keys(updatedChats);
-                let newActiveId = activeChatId;
-
-                if (activeChatId === idToDelete) {
-                    newActiveId = remainingKeys.length > 0 ? remainingKeys[0] : null;
-                } else if (remainingKeys.length === 0) {
-                    newActiveId = null;
-                } else if (!updatedChats[activeChatId] && remainingKeys.length > 0 ) {
-                     newActiveId = remainingKeys[0];
-                }
-
-                setActiveChatId(newActiveId);
-                // O useEffect que observa 'chats' e 'hasLoadedInitialChats' cuidará de criar um novo chat.
-                return updatedChats;
-            });
-
-        } else {
-            // Trata erros do backend (401, 403, 404, 422, 500 etc.)
-            let errorDetail = `Erro ${response.status}: ${response.statusText}`;
-            try {
-                // Tenta parsear como JSON se houver corpo (ex: erro de validação 422)
-                const errorJson = await response.json();
-                errorDetail = errorJson.detail || JSON.stringify(errorJson);
-            } catch (e) {
-                // Se não for JSON, tenta ler como texto
-                const textError = await response.text().catch(() => '');
-                if (textError) errorDetail = textError;
-            }
-            console.error('Erro ao deletar chat no backend:', response.status, errorDetail);
-            alert(`Falha ao deletar o chat no servidor: ${errorDetail}`);
-
-            if (response.status === 401 || response.status === 403) {
-                localStorage.removeItem('accessToken');
-                navigate('/', { replace: true });
-            }
-        }
+      } else {
+        const errorData = await response.json().catch(() => null);
+        throw new Error(errorData?.detail || `Falha ao deletar: ${response.statusText}`);
+      }
     } catch (error) {
-        console.error('Erro na requisição para deletar chat:', error);
-        alert(`Erro de conexão ao tentar deletar o chat: ${error.message}`);
+      alert(error.message);
+      if (error.message.includes("401")) { navigate('/', { replace: true }); }
     } finally {
-        setIsLoading(false);
+      setIsProcessingChatAction(false);
     }
-};
-
-  const handleLogout = () => {
-
-    localStorage.removeItem('accessToken');
-
-    localStorage.removeItem('chats');
-
-    localStorage.removeItem('lastActiveChatId');
-
-    alert('Você foi deslogado!');
-
-    navigate('/', { replace: true });
-
   };
 
-  const shouldShowGreeting = activeChatId &&
-                              chats[activeChatId] &&
-                              chats[activeChatId].messages.length === 0 &&
-                              !chats[activeChatId].userHasTyped;
-
+  const handleLogout = () => {
+    localStorage.clear();
+    alert('Você foi deslogado!');
+    navigate('/', { replace: true });
+  };
+  
+  const shouldShowGreeting = activeChatId && chats[activeChatId] && chats[activeChatId].messages.length === 0 && !chats[activeChatId].userHasTyped;
+                            
   return (
     <div className={`app-container ${isLightMode ? 'light-mode' : 'dark-mode'}`}>
       <div className={`sidebar ${isSidebarVisible ? '' : 'collapsed'}`}>
         <div className="sidebar-header"><span>ChatEdu POLI</span></div>
-        <button className="new-chat-button" onClick={() => handleNewChat(false, false)}>+ Novo Chat</button>
+        <button className="new-chat-button" onClick={() => handleNewChat(false, false)} disabled={isProcessingChatAction}>+ Novo Chat</button>
         <div className="chat-history-list">
-          {Object.entries(chats)
-            .sort(([, chatA], [, chatB]) => (chatB.messages[chatB.messages.length -1]?.timestamp || Date.parse(chatB.createdAt) || 0) - (chatA.messages[chatA.messages.length -1]?.timestamp || Date.parse(chatA.createdAt) || 0)) // Exemplo de sort
-            .map(([id, chat]) => (
-            <div key={id} className={`chat-entry ${id === activeChatId ? 'active' : ''}`}>
-              <div className="chat-history-button" onClick={() => handleSelectChat(id)} title={chat.title}>{chat.title}</div>
-              {id === activeChatId && (
+          {Object.values(chats)
+            .sort((chatA, chatB) => (Date.parse(chatB.createdAt) || 0) - (Date.parse(chatA.createdAt) || 0))
+            .map((chat) => (
+            <div key={chat.id} className={`chat-entry ${chat.id === activeChatId ? 'active' : ''}`}>
+              <div className="chat-history-button" onClick={() => handleSelectChat(chat.id)} title={chat.title}>{chat.title}</div>
+              {chat.id === activeChatId && (
                 <div className="chat-icons">
-                  <img src={renameIcon} alt="Renomear" title="Renomear" className="chat-icon" onClick={(e) => { e.stopPropagation(); handleRenameChat(id);}} />
-                  <img src={deleteIcon} alt="Excluir" title="Excluir" className="chat-icon" onClick={(e) => { e.stopPropagation(); handleDeleteChat(id);}} />
+                  <img src={renameIcon} alt="Renomear" title="Renomear" className="chat-icon" onClick={(e) => { e.stopPropagation(); handleRenameChat(chat.id);}} />
+                  <img src={deleteIcon} alt="Excluir" title="Excluir" className="chat-icon" onClick={(e) => { e.stopPropagation(); handleDeleteChat(chat.id);}} />
                 </div>
               )}
             </div>
@@ -448,13 +367,12 @@ const handleDeleteChat = async (idToDelete) => {
         </div>
         <div className="sidebar-footer"></div>
       </div>
-
       <div className="main-panel">
         <div className="main-panel-header">
           <div className="main-panel-header-left">
             <button className="menu-toggle-main" onClick={() => setIsSidebarVisible(prev => !prev)}><img src={menuIcon} alt="Menu" className="menu-icon-main" /></button>
             <span className="main-panel-title">
-                {activeChatId && chats[activeChatId] ? chats[activeChatId].title : (Object.keys(chats).length > 0 ? "Selecione um chat" : "Chat")}
+                {activeChatId && chats[activeChatId] ? chats[activeChatId].title : "ChatEdu"}
             </span>
           </div>
           <div className="main-panel-header-right">
@@ -470,9 +388,7 @@ const handleDeleteChat = async (idToDelete) => {
             </div>
           </div>
         </div>
-
         <div className="chat-content">
-          {/* Lógica de renderização do conteúdo do chat com keys para animação */}
           {activeChatId && chats[activeChatId] ? (
             shouldShowGreeting ? (
                 <div className="greeting-message-container" key={`greeting-${activeChatId}`}>
@@ -481,7 +397,7 @@ const handleDeleteChat = async (idToDelete) => {
                 </div>
             ) : (
                 <div className="chat-messages" key={activeChatId}>
-                    {currentMessages.map((msg) => (
+                    {chats[activeChatId].messages.map((msg) => (
                         <div key={msg.id} className={`message ${msg.sender === 'user' ? 'user' : 'bot'}`}>
                             {msg.text.split('\n').map((line, i) => (<span key={i}>{line}<br/></span>))}
                         </div>
@@ -497,11 +413,10 @@ const handleDeleteChat = async (idToDelete) => {
             </div>
           )}
         </div>
-
         <div className="input-area-wrapper">
           <div className="chat-input-container">
-            <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyPress} placeholder="Digite sua mensagem..." className="chat-input" rows="1" disabled={!activeChatId || isLoading} />
-            <button onClick={processSendMessage} className="send-button" disabled={!activeChatId || !input.trim() || isLoading}>
+            <textarea value={input} onChange={(e) => setInput(e.target.value)} onKeyDown={handleKeyPress} placeholder="Digite sua mensagem..." className="chat-input" rows="1" disabled={!activeChatId || isLoading || isProcessingChatAction} />
+            <button onClick={processSendMessage} className="send-button" disabled={!activeChatId || !input.trim() || isLoading || isProcessingChatAction}>
               <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"></path></svg>
             </button>
           </div>
