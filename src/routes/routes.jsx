@@ -11,22 +11,62 @@ import Dashboard from '../pages/ProfessorDashboard';
 import GoogleAuthCallback from '../pages/GoogleAuthCallback';
 import PrivateRoute from '../pages/PrivateRoute';
 
+
+
 function AnimatedRoutes() {
   const location = useLocation();
 
   return (
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
+        {/* Rotas Públicas */}
         <Route path="/" element={<LoginPage />} />
-        <Route path="/chat" element={ <PrivateRoute>
-            <ChatPage />
-          </PrivateRoute>} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/faq" element={<FAQPage />} />
-        <Route path="/knowledge" element={<KnowledgeBasePage />} />
-        <Route path="/stats" element={<StatsPage />} />
-        <Route path="/export" element={<ExportPage />} />
         <Route path="/google/callback" element={<GoogleAuthCallback />} />
+        <Route path="/faq" element={<FAQPage />} />
+
+        {/* Rotas Privadas para Usuários Normais (e Admins) */}
+        <Route 
+          path="/chat" 
+          element={
+            <PrivateRoute>
+              <ChatPage />
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/knowledge" 
+          element={
+            <PrivateRoute>
+              <KnowledgeBasePage />
+            </PrivateRoute>
+          } 
+        />
+
+        {/* Rota Privada que requer permissão de 'admin' */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <PrivateRoute roleRequerida="admin">
+              <Dashboard />
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/stats" 
+          element={
+            <PrivateRoute roleRequerida="admin">
+              <StatsPage />
+            </PrivateRoute>
+          } 
+        />
+        <Route 
+          path="/export" 
+          element={
+            <PrivateRoute roleRequerida="admin">
+              <ExportPage />
+            </PrivateRoute>
+          } 
+        />
       </Routes>
     </AnimatePresence>
   );
