@@ -4,9 +4,6 @@ import { AnimatePresence } from 'framer-motion';
 import LoginPage from '../pages/Login';
 import ChatPage from '../pages/ChatPage';
 import FAQPage from '../pages/FAQPage';
-import KnowledgeBasePage from '../pages/KnowledgeBasePage';
-import StatsPage from '../pages/StatsPage';
-import ExportPage from '../pages/ExportPage';
 import Dashboard from '../pages/ProfessorDashboard'; 
 import GoogleAuthCallback from '../pages/GoogleAuthCallback';
 import PrivateRoute from '../pages/PrivateRoute';
@@ -33,40 +30,18 @@ function AnimatedRoutes() {
             </PrivateRoute>
           } 
         />
-        <Route 
-          path="/knowledge" 
-          element={
-            <PrivateRoute>
-              <KnowledgeBasePage />
-            </PrivateRoute>
-          } 
-        />
-
+        
         {/* Rota Privada que requer permissão de 'admin' */}
         <Route 
           path="/dashboard" 
           element={
-            <PrivateRoute roleRequerida="admin">
+            <PrivateRoute roleRequerida="user">
               <Dashboard />
             </PrivateRoute>
           } 
         />
-        <Route 
-          path="/stats" 
-          element={
-            <PrivateRoute roleRequerida="admin">
-              <StatsPage />
-            </PrivateRoute>
-          } 
-        />
-        <Route 
-          path="/export" 
-          element={
-            <PrivateRoute roleRequerida="admin">
-              <ExportPage />
-            </PrivateRoute>
-          } 
-        />
+        
+        
       </Routes>
     </AnimatePresence>
   );
