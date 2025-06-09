@@ -1,4 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import '../styles/ChatPage.css';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -476,7 +480,34 @@ function ChatPage() {
                 <div className="chat-messages" key={activeChatId}>
                     {chats[activeChatId].messages.map((msg) => (
                         <div key={msg.id} className={`message ${msg.sender === 'user' ? 'user' : 'bot'}`}>
-                            {msg.text.split('\n').map((line, i) => (<span key={i}>{line}<br/></span>))}
+                            {msg.sender === 'bot' ? (
+                                <ReactMarkdown 
+                                  remarkPlugins={[remarkGfm]}
+                                  components={{
+                                    code({node, inline, className, children, ...props}) {
+                                      const match = /language-(\w+)/.exec(className || '')
+                                      return !inline && match ? (
+                                        <SyntaxHighlighter
+                                          style={vscDarkPlus}
+                                          language={match[1]}
+                                          PreTag="div"
+                                          {...props}
+                                        >
+                                          {String(children).replace(/\n$/, '')}
+                                        </SyntaxHighlighter>
+                                      ) : (
+                                        <code className={className} {...props}>
+                                          {children}
+                                        </code>
+                                      )
+                                    }
+                                  }}
+                                >
+                                  {msg.text}
+                                </ReactMarkdown>
+                            ) : (
+                                msg.text.split('\n').map((line, i) => (<span key={i}>{line}<br/></span>))
+                            )}
                         </div>
                     ))}
                     <div ref={chatMessagesEndRef} />

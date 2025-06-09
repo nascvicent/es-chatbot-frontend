@@ -442,7 +442,8 @@ body {
   display: flex;
   flex-direction: column;
   gap: 16px;
-  width: 100%;
+  width: 960px;
+  margin: 0 auto;
   animation: fadeInMessages 0.4s ease-out forwards;
 }
 
@@ -450,10 +451,11 @@ body {
   padding: 10px 16px;
   border-radius: 18px;
   word-wrap: break-word;
-  max-width: 80%;
+  max-width: 70%;
   line-height: 1.5;
   font-size: 1rem;
   font-family: "Poppins", sans-serif;
+  text-align: left;
 }
 
 .message.user {
@@ -473,6 +475,7 @@ body {
   color: #bdc1c6;
   margin-right: auto;
   border-bottom-left-radius: 4px;
+  text-align: left;
 }
 .light-mode .message.bot {
   background-color: #f1f3f4;
@@ -635,4 +638,33 @@ body {
   100% {
     background-position: 0% 50%;
   }
+}
+.example-prompts {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1rem;
+  margin-top: 2rem;
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.prompt-card {
+  background-color: var(--sidebar-bg-color);
+  padding: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  flex-basis: calc(50% - 2rem);
+  text-align: center;
+}
+
+.prompt-card:hover {
+  background-color: var(--active-chat-bg-color);
+}
+
+.prompt-card p {
+  margin: 0;
+  color: var(--text-color);
 }
