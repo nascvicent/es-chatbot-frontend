@@ -5,7 +5,7 @@ import logoPoli from '../assets/upelogobased.png';
 
 
 function Login() {
-  const backendUrl = 'https://es-chatbot-production.up.railway.app/auth/login'; 
+  const backendUrl = `${import.meta.env.VITE_API_URL}/auth/login`;
 
   const handleGoogleLogin = () => {
     window.location.href = backendUrl;

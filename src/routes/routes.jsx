@@ -35,7 +35,7 @@ function AnimatedRoutes() {
         <Route 
           path="/dashboard" 
           element={
-            <PrivateRoute roleRequerida="user">
+            <PrivateRoute roleRequerida="admin">
               <Dashboard />
             </PrivateRoute>
           } 

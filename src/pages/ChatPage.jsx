@@ -57,9 +57,9 @@ function ChatPage() {
 
     const newChatFrontendId = `local_${uuidv4()}`; // ID temporário para chats não salvos
     setChats(prevChats => {
-      const existingNumbers = Object.values(prevChats).map(chat => { const match = chat.title.match(/Chat (\d+)/); return match ? parseInt(match[1], 10) : 0; }).filter(num => num > 0);
-      const nextNumber = existingNumbers.length > 0 ? Math.max(0, ...existingNumbers) + 1 : 1;
-      const newChatTitle = `Chat ${nextNumber}`;
+      const nextNumber = Object.keys(prevChats).length + 1; // <-- CORREÇÃO APLICADA AQUI
+    const newChatTitle = `Chat ${nextNumber}`;
+
 
       const newChatData = {
         id: newChatFrontendId,
@@ -81,7 +81,7 @@ function ChatPage() {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) { navigate('/', { replace: true }); return; }
       var Name = localStorage.getItem('userFirstName'); 
-      const storedFirstName = Name.toLowerCase();
+      const storedFirstName = Name.charAt(0).toUpperCase() + Name.slice(1).toLowerCase();
       const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
       setUserName(storedFirstName);
       setUserAvatar(storedAvatarUrl);
@@ -95,18 +95,23 @@ function ChatPage() {
 
         if (response.ok) {
           const serverChatsArray = await response.json();
-          const chatsMap = serverChatsArray.reduce((acc, chat) => {
-            const id = chat.id.toString(); // Usa o ID do backend como chave principal
-            acc[id] = {
-              id: id,
-              backendId: chat.id,
-              title: `Chat ${chat.id}`, // Garante um título consistente com o ID do backend
-              messages: mapBackendMessagesToFrontend(chat.chat_messages?.messages || []),
-              userHasTyped: (chat.chat_messages?.messages || []).some(m => m.role === 'user'),
-              createdAt: chat.created_at,
-            };
-            return acc;
-          }, {});
+
+          const sortedServerChats = serverChatsArray.sort(
+        (a, b) => new Date(a.created_at) - new Date(b.created_at)
+          );
+
+           const chatsMap = sortedServerChats.reduce((acc, chat, index) => {
+        const id = chat.id.toString(); // ID do backend continua sendo a chave
+        acc[id] = {
+            id: id,
+            backendId: chat.id,
+            title: `Chat ${index + 1}`, // <-- CORREÇÃO APLICADA AQUI
+            messages: mapBackendMessagesToFrontend(chat.chat_messages?.messages || []),
+            userHasTyped: (chat.chat_messages?.messages || []).some(m => m.role === 'user'),
+            createdAt: chat.created_at,
+        };
+        return acc;
+    }, {});
           
           setChats(chatsMap);
           const chatIds = Object.keys(chatsMap);
@@ -195,28 +200,40 @@ function ChatPage() {
           const newBackendIdStr = newBackendId.toString();
 
           setChats(prev => {
-            const tempChat = prev[activeChatId];
-            if (!tempChat) return prev;
-            const newState = {...prev};
-            delete newState[activeChatId]; // Remove o chat com ID temporário
-            
-            const finalChat = {
-              ...tempChat,
-              id: newBackendIdStr, // Atualiza o ID principal para o do backend
-              backendId: newBackendId,
-              title: `Chat ${newBackendId}` // Atualiza o título com o ID real
-            };
-            newState[finalChat.id] = finalChat;
+  // Pega o estado do chat temporário
+  const tempChat = prev[activeChatId];
+  if (!tempChat) return prev;
 
-            // Transfere o placeholder da mensagem do bot para o chat finalizado
-            const botMessagePlaceholder = tempChat.messages.find(m => m.id === botMessageId);
-            if(botMessagePlaceholder) {
-                finalChat.messages = [userMessage, botMessagePlaceholder];
-            }
-            
-            setActiveChatId(finalChat.id); // Ativa o novo chat com o ID correto
-            return newState;
-          });
+  // Prepara o novo estado, removendo a entrada com a chave antiga
+  const newState = {...prev};
+  delete newState[activeChatId];
+
+  // Cria o objeto final do chat...
+  const finalChat = {
+    ...tempChat, // ...herda tudo do temporário, incluindo o TÍTULO CORRETO...
+    id: newBackendIdStr,   // ...e atualiza os IDs.
+    backendId: newBackendId,
+    // A linha do título foi removida.
+  };
+
+  // vvvv SIM, ESTA PARTE FICA. É ESSENCIAL. vvvv
+  // Garante que a mensagem do usuário e o placeholder do bot
+  // sejam transferidos para o novo objeto 'finalChat'.
+  const botMessagePlaceholder = tempChat.messages.find(m => m.id === botMessageId);
+  if (botMessagePlaceholder) {
+    // A variável 'userMessage' foi definida no escopo externo de handleSend e está disponível aqui.
+    finalChat.messages = [userMessage, botMessagePlaceholder];
+  }
+  // ^^^^ ESTA PARTE FICA ^^^^
+
+  // Adiciona o chat agora permanente de volta ao estado
+  newState[finalChat.id] = finalChat;
+
+  // Atualiza o chat ativo para o novo ID permanente
+  setActiveChatId(finalChat.id);
+  
+  return newState;
+});
         }
       }
 
