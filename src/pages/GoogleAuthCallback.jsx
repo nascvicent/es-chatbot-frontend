@@ -6,80 +6,80 @@ function GoogleAuthCallback() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // pega o payload codificado da URL
     const base64Payload = searchParams.get('user');
 
     if (base64Payload) {
       try {
+        // 2. Decodifica e parseia o JSON
         const jsonString = atob(base64Payload);
         const tokenData = JSON.parse(jsonString);
 
         console.log("Dados completos recebidos do backend:", tokenData);
 
-        const tokenParaAutenticacao = tokenData.id_token;
+        
+        // 3. pega o 'id_token' em vez do 'access_token'
+        const tokenParaAutenticacao = tokenData.id_token; 
         const refreshToken = tokenData.refresh_token;
 
         if (tokenParaAutenticacao) {
+          // 4. Salva o 'id_token' no localStorage. 
+          // continuar usando a chave 'accessToken' por consistência com o resto do app.
           localStorage.setItem('accessToken', tokenParaAutenticacao);
           if (refreshToken) {
             localStorage.setItem('refreshToken', refreshToken);
           }
           console.log("ID Token (usado para autenticação) salvo no localStorage.");
 
-          const fetchUserData = async () => {
+          // 5. Busca os dados do usuário usando o 'id_token' para autenticar
+          const fetchUserRole = async () => {
             try {
               const backendBaseUrl = 'https://es-chatbot-production.up.railway.app';
               const response = await fetch(`${backendBaseUrl}/users/me`, {
                 headers: {
-                  'Authorization': `Bearer ${tokenParaAutenticacao}`,
+                  // O cabeçalho agora envia o 'id_token' correto
+                  'Authorization': `Bearer ${tokenParaAutenticacao}`, 
+                  'Content-Type': 'application/json'
                 }
               });
 
               if (!response.ok) {
-                const errorData = await response.json().catch(() => ({detail: "Erro desconhecido"}));
+                // Se a resposta não for OK, tenta pegar o detalhe do erro do backend
+                const errorData = await response.json();
                 throw new Error(errorData.detail || 'Falha ao buscar dados do usuário.');
               }
 
               const userData = await response.json();
-              console.log("Dados do usuário de /users/me:", userData);
+              console.log("Dados do usuário de /users/me (sucesso!):", userData);
 
-              // Extrai e salva os dados do usuário com segurança
-              const userFullName = userData.name || 'Usuário';
-              const userAvatarUrl = userData.avatar_url;
-              const userRole = userData.role || 'user'; // Define um role padrão se não vier
-
-              localStorage.setItem('userFirstName', userFullName.split(' ')[0]);
-              // Salva a URL do avatar apenas se ela existir
-              if (userAvatarUrl) {
-                localStorage.setItem('userAvatarUrl', userAvatarUrl);
-              } else {
-                localStorage.removeItem('userAvatarUrl'); // Remove qualquer avatar antigo se não vier um novo
-              }
+              // Extrai o role e redireciona o usuário
+              const userRole = userData.role;
               localStorage.setItem('userRole', userRole);
 
-              // Redireciona com base no role
               if (userRole === 'admin') {
                 navigate('/dashboard');
-              } else {
+              } else if (userRole === 'user') {
                 navigate('/chat');
+              } else {
+                console.warn("Role do usuário desconhecido:", userRole);
+                navigate('/');
               }
 
             } catch (error) {
-              console.error("Erro ao buscar/processar dados do usuário:", error);
-              // Mesmo com erro, se temos o token, podemos ir para o chat com dados padrão
-              localStorage.setItem('userFirstName', 'Usuário');
-              localStorage.removeItem('userAvatarUrl');
-              navigate('/chat');
+              console.error("Erro ao buscar role do usuário:", error);
+              navigate('/');
             }
           };
 
-          fetchUserData();
+          fetchUserRole();
 
         } else {
-          throw new Error("ID Token não encontrado no payload.");
+          console.error("ID Token não encontrado no payload decodificado.");
+          navigate('/');
         }
       } catch (error) {
-        console.error("Erro no callback do Google:", error);
-        navigate('/'); // Redireciona para home/login em caso de erro crítico
+        console.error("Erro ao decodificar ou processar o payload Base64:", error);
+        navigate('/');
       }
     } else {
       console.error("Nenhum payload 'user' encontrado na URL.");
@@ -87,7 +87,7 @@ function GoogleAuthCallback() {
     }
   }, [searchParams, navigate]);
 
-  return <div>Processando autenticação...</div>;
+  return <div>Processando autenticação com o Google...</div>;
 }
 
 export default GoogleAuthCallback;
