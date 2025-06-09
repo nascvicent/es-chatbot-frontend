@@ -56,6 +56,11 @@ function GoogleAuthCallback() {
               const userRole = userData.role;
               localStorage.setItem('userRole', userRole);
 
+              localStorage.setItem('userFirstName', userData.name); 
+
+// Salva a URL do avatar, usando a chave 'avatar_url' que vem do backend.
+              localStorage.setItem('userAvatarUrl', userData.avatar_url);
+
               if (userRole === 'admin') {
                 navigate('/dashboard');
               } else if (userRole === 'user') {
