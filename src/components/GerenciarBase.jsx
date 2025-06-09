@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { FiUploadCloud, FiFileText, FiTrash2, FiCheckCircle } from 'react-icons/fi';
 import "../styles/GerenciadorBase.css"; // Usaremos o novo CSS
 
-const API_URL = 'https://es-chatbot-production.up.railway.app/document';
+const API_URL = `${import.meta.env.VITE_API_URL}`;
 
 export default function GerenciarBase() {
   const [file, setFile] = useState(null);
