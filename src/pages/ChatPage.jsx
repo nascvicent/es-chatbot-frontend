@@ -451,7 +451,6 @@ function ChatPage() {
                             {msg.text.split('\n').map((line, i) => (<span key={i}>{line}<br/></span>))}
                         </div>
                     ))}
-                    {isLoading && (<div className="message bot"><span>Digitando...</span></div>)}
                     <div ref={chatMessagesEndRef} />
                 </div>
             )
