@@ -4,6 +4,7 @@ body {
   font-family: 'Roboto', 'Arial', sans-serif;
   height: 100vh;
   overflow: hidden;
+  
 }
 
 .dark-mode {
@@ -19,12 +20,13 @@ body {
 .app-container {
   display: flex;
   height: 100vh;
+
 }
 
 /* Sidebar */
 .sidebar {
   width: 260px;
-  background-color: #333538 !important;
+  background-color: #333538 important!;
   padding: 12px;
   display: flex;
   flex-direction: column;
@@ -396,7 +398,7 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   margin: 0 auto;
-  width: 1870px;
+  width: 100vw;
   box-sizing: border-box;
 }
 
@@ -579,7 +581,7 @@ body {
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #4a4b4d;
+  background: #000000;
   border-radius: 4px;
 }
 ::-webkit-scrollbar-thumb:hover {
