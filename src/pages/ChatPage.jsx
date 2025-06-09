@@ -10,7 +10,7 @@ import menuIcon from '../assets/menu.png';
 const INITIAL_TYPING_DELAY_MS = 5;
 const ACCELERATED_TYPING_DELAY_MS = 5;
 const ACCELERATION_THRESHOLD_CHARS = 80;
-const API_BASE_URL = 'https://es-chatbot-production.up.railway.app';
+const API_BASE_URL =`${import.meta.env.VITE_API_URL}`;
 const SIDEBAR_ANIMATION_DELAY = 300;
 
 // --- Funções Auxiliares Estáveis ---
