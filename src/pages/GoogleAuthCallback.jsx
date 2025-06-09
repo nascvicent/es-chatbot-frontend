@@ -34,7 +34,7 @@ function GoogleAuthCallback() {
           // 5. Busca os dados do usuário usando o 'id_token' para autenticar
           const fetchUserRole = async () => {
             try {
-              const backendUrl = `${import.meta.env.VITE_API_URL}`;
+              const backendBaseUrl = `${import.meta.env.VITE_API_URL}`;
               const response = await fetch(`${backendBaseUrl}/users/me`, {
                 headers: {
                   // O cabeçalho agora envia o 'id_token' correto
