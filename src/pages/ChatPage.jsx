@@ -6,12 +6,9 @@ import renameIcon from '../assets/rename.png';
 import deleteIcon from '../assets/delete.png';
 import menuIcon from '../assets/menu.png';
 
-
 // --- Constantes ---
 const INITIAL_TYPING_DELAY_MS = 5;
 const ACCELERATED_TYPING_DELAY_MS = 5;
-
-
 const ACCELERATION_THRESHOLD_CHARS = 80;
 const API_BASE_URL = 'https://es-chatbot-production.up.railway.app';
 const SIDEBAR_ANIMATION_DELAY = 300;
@@ -37,9 +34,10 @@ function ChatPage() {
   const [isProcessingChatAction, setIsProcessingChatAction] = useState(false);
   const [hasLoadedInitialChats, setHasLoadedInitialChats] = useState(false);
 
-  const userName = "Márcio";
+  
   const chatMessagesEndRef = useRef(null);
-
+  const [userName, setUserName] = useState("Usuário");
+  const [userAvatar, setUserAvatar] = useState(null);
   // --- Efeitos ---
   const scrollToBottom = () => {
     chatMessagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -82,9 +80,16 @@ function ChatPage() {
       setIsProcessingChatAction(true);
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) { navigate('/', { replace: true }); return; }
-      
+      var Name = localStorage.getItem('userFirstName'); 
+      const storedFirstName = Name.toLowerCase();
+      const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
+      setUserName(storedFirstName);
+      setUserAvatar(storedAvatarUrl);
       try {
+        // --- ALTERAÇÃO PRINCIPAL AQUI ---
+        // A requisição GET agora é feita para o endpoint /chat
         const response = await fetch(`${API_BASE_URL}/chat-history`, {
+          method: 'GET', // Adicionado para clareza, embora GET seja o padrão
           headers: { 'Authorization': `Bearer ${accessToken}` },
         });
 
@@ -316,6 +321,7 @@ function ChatPage() {
     try {
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) throw new Error("Sessão expirou.");
+      // A deleção ainda deve usar o endpoint específico com o ID
       const response = await fetch(`${API_BASE_URL}/chat-history/${backendChatId}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${accessToken}` },
@@ -325,9 +331,16 @@ function ChatPage() {
         setChats(prev => {
           const updatedChats = { ...prev };
           delete updatedChats[idToDelete];
+          
           if (activeChatId === idToDelete) { setActiveChatId(Object.keys(updatedChats).length > 0 ? Object.keys(updatedChats)[0] : null); }
+          console.log("deletado")
+          const remainingBackendIds = Object.values(updatedChats)
+                                          .map(chat => chat.backendId)
+                                          .filter(id => id != null); // Garante que apenas IDs reais sejam logados
+          console.log("IDs de backend ativos:", remainingBackendIds);
           return updatedChats;
         });
+        
       } else {
         const errorData = await response.json().catch(() => null);
         throw new Error(errorData?.detail || `Falha ao deletar: ${response.statusText}`);
@@ -347,7 +360,7 @@ function ChatPage() {
   };
   
   const shouldShowGreeting = activeChatId && chats[activeChatId] && chats[activeChatId].messages.length === 0 && !chats[activeChatId].userHasTyped;
-                            
+                                
   return (
     <div className={`app-container ${isLightMode ? 'light-mode' : 'dark-mode'}`}>
       <div className={`sidebar ${isSidebarVisible ? '' : 'collapsed'}`}>
@@ -381,7 +394,13 @@ function ChatPage() {
           <div className="main-panel-header-right">
             <button className="theme-toggle-header" onClick={() => setIsLightMode(prev => !prev)}>{isLightMode ? '🌙' : '☀️'}</button>
             <div className="user-menu-wrapper-header">
-              <button className="user-icon-header" onClick={() => setShowUserMenu(prev => !prev)}>👤</button>
+              <button className="user-icon-header" onClick={() => setShowUserMenu(prev => !prev)}>
+                {userAvatar ? (
+                  <img src={userAvatar} alt={`Avatar de ${userName}`} className="user-avatar-image" />
+                ) : (
+                  userName.charAt(0).toUpperCase()
+                )}
+              </button>
               {showUserMenu && (
                 <div className="user-menu-header">
                   <p><strong>Usuário:</strong> {userName}</p>

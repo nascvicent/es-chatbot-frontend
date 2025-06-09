@@ -1,13 +1,13 @@
 /* Reset and Base Styles */
 body {
   margin: 0;
-  font-family: 'Roboto', 'Arial', sans-serif; /* Adicionado do código 2 */
+  font-family: 'Roboto', 'Arial', sans-serif;
   height: 100vh;
   overflow: hidden;
 }
 
 .dark-mode {
-  background-color: #131314;
+  background-color: #252527;
   color: #e8eaed;
 }
 .light-mode {
@@ -24,49 +24,49 @@ body {
 /* Sidebar */
 .sidebar {
   width: 260px;
-  background-color: #333538 !important; /* Original do código 1, mantido !important */
+  background-color: #333538 !important;
   padding: 12px;
   display: flex;
   flex-direction: column;
-  transition: width 0.5s ease, padding 0.3s ease; /* Transição de largura ajustada para 0.5s para suavizar */
+  transition: width 0.5s ease, padding 0.3s ease; /* Esta linha cria a animação suave */
   overflow-y: auto;
   box-sizing: border-box;
   flex-shrink: 0;
-  position: relative; /* Adicionado para contexto de z-index se necessário e para overflow */
+  position: relative;
 }
 
 .sidebar.collapsed {
   width: 0;
   padding: 12px 0;
-  overflow: hidden; /* Garante que o conteúdo seja cortado quando a sidebar está colapsada */
+  overflow: hidden;
 }
 
 .light-mode .sidebar {
-  background-color: #f0f4f9 !important; /* ADICIONADO !important AQUI para corrigir a cor no modo claro */
+  background-color: #f0f4f9 !important;
   border-right: 1px solid #dadce0;
 }
 
-/* Estilos para os filhos diretos da sidebar que precisam animar (ADICIONADO DO CÓDIGO 2) */
+/* Estilos para os filhos diretos da sidebar que precisam animar */
 .sidebar-header,
 .new-chat-button,
 .chat-history-list,
 .sidebar-footer {
   opacity: 1;
   visibility: visible;
-  /* Transição para quando a sidebar está EXPANDINDO */
+  /* Transição para quando a sidebar está EXPANDINDO (com delay) */
   transition: opacity 0.2s ease-in-out 0.3s, visibility 0s linear 0.3s;
-  overflow: hidden; /* Ajuda a conter o conteúdo durante a transição */
-  white-space: nowrap; /* Impede que o texto quebre linha durante a animação */
+  overflow: hidden;
+  white-space: nowrap;
 }
 
-/* Estilos para os filhos quando a sidebar está COLAPSADA (ADICIONADO DO CÓDIGO 2) */
+/* Estilos para os filhos quando a sidebar está COLAPSADA */
 .sidebar.collapsed .sidebar-header,
 .sidebar.collapsed .new-chat-button,
 .sidebar.collapsed .chat-history-list,
 .sidebar.collapsed .sidebar-footer {
   opacity: 0;
   visibility: hidden;
-  /* Transição para quando a sidebar está COLAPSANDO */
+  /* Transição para quando a sidebar está COLAPSANDO (rápida) */
   transition: opacity 0.05s ease-in-out, visibility 0s linear 0.05s;
 }
 
@@ -76,7 +76,7 @@ body {
   padding: 8px 12px 16px 12px;
   color: #e8eaed;
   flex-shrink: 0;
-  text-overflow: ellipsis; /* Adicionado para garantir o corte de texto */
+  text-overflow: ellipsis;
 }
 
 .light-mode .sidebar-header {
@@ -306,9 +306,8 @@ body {
 }
 
 .user-icon-header {
-  /* MODIFICADO: background original era #353638, agora como o theme-toggle */
   background: none;
-  color: white; /* Mantenha ou ajuste a cor do ícone conforme necessário */
+  color: white;
   font-size: 1rem;
   border: none;
   width: 38px;
@@ -320,17 +319,23 @@ body {
   justify-content: center;
   transition: background-color 0.2s;
 }
+
+.user-icon-header .user-avatar-image {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
 .user-icon-header:hover {
-  /* MODIFICADO: background-color original era #4a4b4d, agora como o theme-toggle */
   background-color: rgba(255, 255, 255, 0.1);
 }
 .light-mode .user-icon-header {
-  /* MODIFICADO: background-color original era #e8f0fe, agora como o theme-toggle */
   background: none;
-  color: #1967d2; /* Mantenha ou ajuste a cor do ícone conforme necessário para o modo claro */
+  color: #1967d2;
 }
 .light-mode .user-icon-header:hover {
-  /* MODIFICADO: background-color original era #d2e3fc, agora como o theme-toggle */
   background-color: rgba(0, 0, 0, 0.05);
 }
 
@@ -391,7 +396,7 @@ body {
   flex-direction: column;
   justify-content: flex-start;
   margin: 0 auto;
-  width: 1870px; /* Considere usar max-width e width: 100% para responsividade */
+  width: 1870px;
   box-sizing: border-box;
 }
 
@@ -413,6 +418,9 @@ body {
   font-size: 1.1rem;
   color: #80868b;
   margin-top: 8px;
+  opacity: 0;
+  font-family: "Poppins", sans-serif;
+  animation: fadeInUp 0.5s 0.2s ease-out both;
 }
 .light-mode .greeting-submessage {
   color: #70757a;
@@ -420,7 +428,7 @@ body {
 @keyframes fadeInMessages {
   from {
     opacity: 0;
-    transform: translateY(10px); /* Opcional: leve subida */
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
@@ -429,12 +437,10 @@ body {
 }
 
 .chat-messages {
-  /* Seus estilos existentes para .chat-messages */
   display: flex;
   flex-direction: column;
   gap: 16px;
   width: 100%;
-  /* Adicione a animação */
   animation: fadeInMessages 0.4s ease-out forwards;
 }
 
@@ -489,7 +495,6 @@ body {
   padding: 10px 10px 10px 22px;
   box-shadow: 0 1px 3px rgba(0,0,0,0.1);
   border: 1px solid #3c4043;
-  
 }
 .light-mode .chat-input-container {
   background-color: #f0f4f9;
@@ -594,11 +599,11 @@ body {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px); /* Começa 20px abaixo da posição final */
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
-    transform: translateY(0); /* Termina na sua posição original */
+    transform: translateY(0);
   }
 }
 
@@ -614,20 +619,8 @@ body {
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  
-  /* CORREÇÃO: A propriedade 'animation' agora está declarada apenas uma vez,
-    com as duas animações separadas por vírgula. */
   animation:
     fadeInUp 0.5s ease-out both;
-}
-
-/* 3. Aplica a animação no subtítulo com delay */
-.greeting-submessage {
-  /* Garante que o elemento comece invisível, evitando o "piscar" */
-  opacity: 0;
-  font-family: "Poppins", sans-serif;
-  /* Animação: nome, duração, DELAY, suavização, modo de preenchimento */
-  animation: fadeInUp 0.5s 0.2s ease-out both; 
 }
 
 @keyframes gradient-flow {
