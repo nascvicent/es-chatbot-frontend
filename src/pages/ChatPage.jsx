@@ -34,7 +34,10 @@ function ChatPage() {
   const [isProcessingChatAction, setIsProcessingChatAction] = useState(false);
   const [hasLoadedInitialChats, setHasLoadedInitialChats] = useState(false);
 
-  
+  const handleExamplePromptClick = (prompt) => {
+    setInput(prompt);
+  };
+
   const chatMessagesEndRef = useRef(null);
   const [userName, setUserName] = useState("Usuário");
   const [userAvatar, setUserAvatar] = useState(null);
@@ -454,6 +457,20 @@ function ChatPage() {
                 <div className="greeting-message-container" key={`greeting-${activeChatId}`}>
                     <h1 className="greeting-message">Olá, {userName}</h1>
                     <p className="greeting-submessage">Como posso te ajudar hoje?</p>
+                    <div className="example-prompts">
+                      <div className="prompt-card" onClick={() => handleExamplePromptClick('Me explique os princípios SOLID')}>
+                          <p>Me explique os princípios SOLID</p>
+                      </div>
+                      <div className="prompt-card" onClick={() => handleExamplePromptClick('Crie um exemplo de Singleton em Python')}>
+                          <p>Crie um exemplo de Singleton em Python</p>
+                      </div>
+                      <div className="prompt-card" onClick={() => handleExamplePromptClick('Quais as diferenças entre REST e GraphQL?')}>
+                          <p>Quais as diferenças entre REST e GraphQL?</p>
+                      </div>
+                      <div className="prompt-card" onClick={() => handleExamplePromptClick('/desafio estruturas de dados')}>
+                          <p>Use <strong>/desafio</strong> para pedir um desafio sobre um tema</p>
+                      </div>
+                    </div>
                 </div>
             ) : (
                 <div className="chat-messages" key={activeChatId}>
