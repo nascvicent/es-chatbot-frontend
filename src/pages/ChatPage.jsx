@@ -80,11 +80,21 @@ function ChatPage() {
       setIsProcessingChatAction(true);
       const accessToken = localStorage.getItem('accessToken');
       if (!accessToken) { navigate('/', { replace: true }); return; }
-      var Name = localStorage.getItem('userFirstName'); 
-      const storedFirstName = Name.charAt(0).toUpperCase() + Name.slice(1).toLowerCase();
-      const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
-      setUserName(storedFirstName);
-      setUserAvatar(storedAvatarUrl);
+       let displayName = "Usuário"; 
+
+    const fullName = localStorage.getItem('userFirstName');
+    
+    if (fullName) {
+        const firstName = fullName.split(' ')[0];
+        displayName = firstName.charAt(0).toUpperCase() + firstName.slice(1).toLowerCase();
+    }
+
+    const storedAvatarUrl = localStorage.getItem('userAvatarUrl');
+
+    
+    setUserName(displayName); 
+    setUserAvatar(storedAvatarUrl);
+
       try {
         // --- ALTERAÇÃO PRINCIPAL AQUI ---
         // A requisição GET agora é feita para o endpoint /chat
