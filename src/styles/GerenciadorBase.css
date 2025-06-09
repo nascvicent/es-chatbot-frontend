@@ -1,0 +1,151 @@
+/* GerenciadorBase.css */
+
+/* PROPOSTA DE MELHORIA DE CORES
+  - Maior Contraste (Acessibilidade aprimorada).
+  - Harmonia entre os tons de cinza/neutros.
+  - Cor de destaque mais vibrante e consistente entre os temas.
+  - Hierarquia visual mais clara.
+*/
+
+:root {
+  --dark-bg: #121212; /* Cinza escuro (usado pelo Facebook), menos duro que o preto */
+  --primary-surface: #242526; /* Superfície primária um pouco mais clara */
+  --secondary-surface: #3A3B3C; /* Superfície para hovers e elementos secundários */
+  --primary-accent:  #4FD1C5;  /* Um azul mais vibrante e elétrico */
+  --primary-text: #E4E6EB; /* Texto primário quase branco */
+  --secondary-text: #B0B3B8; /* Texto secundário com ótimo contraste */
+  --border-color: #4A4A4A;
+  --error-color: #e57373;
+  --success-color: #81c784;
+
+  --button-color: var(--primary-surface); 
+  --hover-color: #4FD1C5; /* Versão mais escura do acento para hover */
+}
+
+.light {
+  --dark-bg:  #F4F7FC;
+  --primary-surface: #FFFFFF;
+  --secondary-surface: #E4E6EB;
+  --primary-accent:#17A2B8;
+  --primary-text: #1c1e21;
+  --secondary-text: #65676b;
+  --border-color: #ced0d4;
+  --error-color: #e57373;
+  --success-color: #81c784;
+
+  --button-color: var(--primary-surface);
+  --hover-color: #008AC7;
+}
+
+.gerenciar-base-container {
+  background-color: var(--dark-bg);
+  color: var(--primary-text);
+  max-width: 800px;
+  margin: 2rem auto;
+  padding: 2rem;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.drag-drop-area {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2.5rem;
+  border: 2px dashed var(--border-color);
+  background-color: var(--primary-surface);
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+}
+
+.drag-drop-area:hover,
+.drag-drop-area.dragging {
+  background-color: var(--secondary-surface);
+  border-color: var(--primary-accent);
+}
+
+.drag-drop-area .upload-icon {
+  font-size: 3rem;
+  color: var(--primary-accent);
+  margin-bottom: 1rem;
+}
+
+.drag-drop-area h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--primary-text);
+}
+
+.drag-drop-area p {
+  margin: 0.25rem 0 1rem 0;
+  color: var(--secondary-text);
+}
+
+.drag-drop-area span {
+  font-size: 0.8rem;
+  color: var(--secondary-text);
+}
+
+.message {
+  margin-top: 1.5rem;
+  font-weight: 500;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.message.success {
+  color: #1e1e1e;
+  background-color: var(--success-color);
+}
+
+.message.error {
+  color: #1e1e1e;
+  background-color: var(--error-color);
+}
+
+.file-list-container {
+  margin-top: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--button-color);
+  padding: 1rem 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.file-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+
+.loading-text {
+    text-align: center;
+    color: var(--gb-text-secondary);
+    margin-top: 1rem;
+}
+
+.upload-button {
+  
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.2s ease;
+}
+
+.upload-button:hover {
+  background-color: var(--hover-color);
+}
