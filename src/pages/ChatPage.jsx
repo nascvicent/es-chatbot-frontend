@@ -169,7 +169,7 @@ function ChatPage() {
 
   const handleSend = async () => {
     if (input.trim() === '' || !activeChatId || !chats[activeChatId]) return;
-    
+
     const userMessage = { sender: 'user', text: input, id: uuidv4() };
     const currentInputForAPI = input;
     setInput('');
@@ -178,108 +178,119 @@ function ChatPage() {
     const isNewChat = !currentChat.backendId;
 
     setChats(prev => ({
-      ...prev,
-      [activeChatId]: { ...prev[activeChatId], messages: [...prev[activeChatId].messages, userMessage, { sender: 'bot', text: '', id: botMessageId }], userHasTyped: true }
+        ...prev,
+        [activeChatId]: { ...prev[activeChatId], messages: [...prev[activeChatId].messages, userMessage, { sender: 'bot', text: '', id: botMessageId }], userHasTyped: true }
     }));
 
     setIsLoading(true);
+    let finalActiveChatId = activeChatId; 
+
     try {
-      const accessToken = localStorage.getItem('accessToken');
-      if (!accessToken) throw new Error('Sessão expirou.');
+        const accessToken = localStorage.getItem('accessToken');
+        if (!accessToken) throw new Error('Sessão expirou.');
 
-      const payload = {
-        message: currentInputForAPI,
-        chat_history_id: currentChat.backendId,
-      };
-      
-      const response = await fetch(`${API_BASE_URL}/chat`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'Authorization': `Bearer ${accessToken}` },
-        body: JSON.stringify(payload),
-      });
+        let chatHistoryIdForRequest = currentChat.backendId;
 
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => null);
-        throw new Error(errorData?.detail || `Erro do servidor: ${response.statusText}`);
-      }
-      
-      if (isNewChat) {
-        const newBackendIdHeader = response.headers.get('X-Chat-History-ID'); // <<-- CONFIRME ESTE NOME COM O BACKEND
-        if (newBackendIdHeader) {
-          const newBackendId = parseInt(newBackendIdHeader, 10);
-          const newBackendIdStr = newBackendId.toString();
+        if (isNewChat) {
+            const createChatResponse = await fetch(`${API_BASE_URL}/chat-history`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${accessToken}` },
+                body: JSON.stringify({ chat_messages: { messages: [] } })
+            });
 
-          setChats(prev => {
-  // Pega o estado do chat temporário
-  const tempChat = prev[activeChatId];
-  if (!tempChat) return prev;
+            if (!createChatResponse.ok) {
+                const errorData = await createChatResponse.json().catch(() => null);
+                throw new Error(errorData?.detail || `Falha ao criar o chat: ${createChatResponse.statusText}`);
+            }
 
-  // Prepara o novo estado, removendo a entrada com a chave antiga
-  const newState = {...prev};
-  delete newState[activeChatId];
+            const newChatData = await createChatResponse.json();
+            const newBackendId = newChatData.id;
+            chatHistoryIdForRequest = newBackendId;
+            const newBackendIdStr = newBackendId.toString();
+            finalActiveChatId = newBackendIdStr;
 
-  // Cria o objeto final do chat...
-  const finalChat = {
-    ...tempChat, // ...herda tudo do temporário, incluindo o TÍTULO CORRETO...
-    id: newBackendIdStr,   // ...e atualiza os IDs.
-    backendId: newBackendId,
-    // A linha do título foi removida.
-  };
+            setChats(prev => {
+                const tempChat = prev[activeChatId];
+                if (!tempChat) return prev;
 
-  // vvvv SIM, ESTA PARTE FICA. É ESSENCIAL. vvvv
-  // Garante que a mensagem do usuário e o placeholder do bot
-  // sejam transferidos para o novo objeto 'finalChat'.
-  const botMessagePlaceholder = tempChat.messages.find(m => m.id === botMessageId);
-  if (botMessagePlaceholder) {
-    // A variável 'userMessage' foi definida no escopo externo de handleSend e está disponível aqui.
-    finalChat.messages = [userMessage, botMessagePlaceholder];
-  }
-  // ^^^^ ESTA PARTE FICA ^^^^
+                const newState = { ...prev };
+                delete newState[activeChatId];
 
-  // Adiciona o chat agora permanente de volta ao estado
-  newState[finalChat.id] = finalChat;
-
-  // Atualiza o chat ativo para o novo ID permanente
-  setActiveChatId(finalChat.id);
-  
-  return newState;
-});
+                const finalChat = {
+                    ...tempChat,
+                    id: newBackendIdStr,
+                    backendId: newBackendId,
+                };
+                newState[finalChat.id] = finalChat;
+                return newState;
+            });
+            setActiveChatId(newBackendIdStr);
         }
-      }
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let streamDone = false;
-      while (!streamDone) {
-        const { value, done } = await reader.read();
-        if (done) { streamDone = true; break; }
-        const chunk = decoder.decode(value, { stream: true });
-        for (let i = 0; i < chunk.length; i++) {
-          const char = chunk[i];
-          setChats(prev => {
-            // Usa o ID ativo mais recente, que pode ter sido atualizado se for um novo chat
-            const currentActiveId = activeChatId; 
-            if (!prev[currentActiveId]?.messages.find(m => m.id === botMessageId)) return prev;
+        const payload = {
+            message: currentInputForAPI,
+            chat_history_id: chatHistoryIdForRequest,
+        };
 
-            const updatedMessages = prev[currentActiveId].messages.map(msg =>
-              msg.id === botMessageId ? { ...msg, text: msg.text + char } : msg
-            );
-            return { ...prev, [currentActiveId]: { ...prev[currentActiveId], messages: updatedMessages }};
-          });
-          // Lógica de delay
-          const currentLength = (chats[activeChatId]?.messages.find(m => m.id === botMessageId)?.text.length || 0) + 1;
-          const delay = currentLength > ACCELERATION_THRESHOLD_CHARS ? ACCELERATED_TYPING_DELAY_MS : INITIAL_TYPING_DELAY_MS;
-          await new Promise(resolve => setTimeout(resolve, delay));
+        const response = await fetch(`${API_BASE_URL}/chat`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Accept': 'text/event-stream', 'Authorization': `Bearer ${accessToken}` },
+            body: JSON.stringify(payload),
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => null);
+            throw new Error(errorData?.detail || `Erro do servidor: ${response.statusText}`);
         }
-      }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let streamDone = false;
+        let currentBotMessageLength = 0; 
+
+        while (!streamDone) {
+            const { value, done } = await reader.read();
+            if (done) { streamDone = true; break; }
+            const chunk = decoder.decode(value, { stream: true });
+            for (const char of chunk) {
+                setChats(prev => {
+                    const currentActiveChat = prev[finalActiveChatId];
+                    if (!currentActiveChat?.messages.find(m => m.id === botMessageId)) return prev;
+
+                    const updatedMessages = currentActiveChat.messages.map(msg =>
+                        msg.id === botMessageId ? { ...msg, text: msg.text + char } : msg
+                    );
+                    return { ...prev, [finalActiveChatId]: { ...currentActiveChat, messages: updatedMessages } };
+                });
+                currentBotMessageLength++;
+                const delay = currentBotMessageLength > ACCELERATION_THRESHOLD_CHARS ? ACCELERATED_TYPING_DELAY_MS : INITIAL_TYPING_DELAY_MS;
+                if (delay > 0) await new Promise(resolve => setTimeout(resolve, delay));
+            }
+        }
     } catch (error) {
-      console.error('Falha na comunicação com o chat:', error);
-      alert(`Erro: ${error.message}`);
-      if (error.message.includes("401")) navigate('/', { replace: true });
+        console.error('Falha na comunicação com o chat:', error);
+        alert(`Erro: ${error.message}`);
+        
+        setInput(currentInputForAPI); 
+        setChats(prev => {
+            const chat = prev[finalActiveChatId]; 
+            if (!chat) return prev;
+
+            const revertedMessages = chat.messages.filter(
+                m => m.id !== userMessage.id && m.id !== botMessageId
+            );
+
+            return {
+                ...prev,
+                [chat.id]: { ...chat, messages: revertedMessages }
+            };
+        });
+
+        if (error.message.includes("401")) navigate('/', { replace: true });
     } finally {
-      setIsLoading(false);
+        setIsLoading(false);
     }
-  };
+};
   
   const processSendMessage = async () => {
     if (input.trim() === '' || !activeChatId) return;
@@ -451,7 +462,6 @@ function ChatPage() {
                             {msg.text.split('\n').map((line, i) => (<span key={i}>{line}<br/></span>))}
                         </div>
                     ))}
-                    {isLoading && (<div className="message bot"><span>Digitando...</span></div>)}
                     <div ref={chatMessagesEndRef} />
                 </div>
             )
