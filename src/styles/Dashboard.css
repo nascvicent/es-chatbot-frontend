@@ -149,6 +149,13 @@ body.light .profile-pic {
   color: var(--text-primary);
 }
 
+/* ADICIONE ESTA NOVA REGRA ABAIXO */
+.profile-info span {
+  white-space: nowrap; /* Impede que o texto quebre em múltiplas linhas */
+  overflow: hidden; /* Esconde o texto que transbordar */
+  text-overflow: ellipsis; /* Adiciona "..." se o nome for muito longo para o espaço */
+}
+
 .profile-info img {
   width: 40px;
   height: 40px;
@@ -240,4 +247,98 @@ body.light .profile-pic {
 .custom-tooltip .intro {
   margin: 5px 0 0;
   color: var(--primary-color);
+}
+/*
+ * =========================================
+ * CSS PARA RESPONSIVIDADE DO DASHBOARD
+ * =========================================
+*/
+
+/* Esconde o botão hambúrguer em telas grandes */
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  margin-right: 1rem;
+}
+
+/* Agrupa os itens da esquerda da topbar */
+.topbar-left {
+  display: flex;
+  align-items: center;
+}
+
+/* Overlay para escurecer o fundo quando o menu estiver aberto no mobile */
+.overlay {
+  display: none;
+}
+
+
+/* Telas de tablet e celular (ponto de quebra) */
+@media (max-width: 768px) {
+
+
+  .profile-pic {
+  width: 30vw;
+  transition: filter 0.3s ease-in-out;
+} 
+  .admin-dashboard {
+    /* Garante que o flexbox continue funcionando */
+    flex-direction: row; 
+  }
+
+  .sidebar {
+    position: fixed; /* Fica por cima de todo o conteúdo */
+    left: 0;
+    top: 0;
+    height: 100%;
+    z-index: 1000; /* Garante que fique na frente */
+    transform: translateX(-100%); /* Esconde a sidebar fora da tela por padrão */
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .sidebar.open {
+    transform: translateX(0); /* Mostra a sidebar quando a classe 'open' é aplicada */
+  }
+
+  .main-content {
+    /* Ocupa toda a largura da tela, já que a sidebar não ocupa mais espaço no fluxo */
+    width: 100%; 
+    padding: 1rem; /* Reduz o padding em telas menores */
+  }
+
+  .topbar {
+    padding: 0.75rem 1rem;
+  }
+
+  .topbar h2 {
+    font-size: 1.1rem; /* Diminui o título da seção */
+  }
+
+  /* Mostra o botão hambúrguer */
+  .hamburger-btn {
+    display: block;
+  }
+
+  .profile-info span {
+    display: none; /* Esconde o texto "Professor" para economizar espaço */
+  }
+
+  .stats-cards {
+    grid-template-columns: 1fr; /* Força os cards a ficarem um por coluna */
+  }
+  
+  /* Ativa o overlay quando o menu estiver aberto */
+  .sidebar.open + .overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
+  }
 }
