@@ -74,7 +74,7 @@ export default function GerenciarBase() {
     const formData = new FormData();
     formData.append('file', file);
     try {
-      const response = await fetch(`${API_URL}/upload`, {
+      const response = await fetch(`${API_URL}/document/upload`, {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData,
