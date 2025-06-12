@@ -1,40 +1,35 @@
 /* GerenciadorBase.css */
 
-/* PROPOSTA DE MELHORIA DE CORES
-  - Maior Contraste (Acessibilidade aprimorada).
-  - Harmonia entre os tons de cinza/neutros.
-  - Cor de destaque mais vibrante e consistente entre os temas.
-  - Hierarquia visual mais clara.
-*/
-
 :root {
-  --dark-bg: #121212; /* Cinza escuro (usado pelo Facebook), menos duro que o preto */
-  --primary-surface: #242526; /* Superfície primária um pouco mais clara */
-  --secondary-surface: #3A3B3C; /* Superfície para hovers e elementos secundários */
-  --primary-accent:  #4FD1C5;  /* Um azul mais vibrante e elétrico */
-  --primary-text: #E4E6EB; /* Texto primário quase branco */
-  --secondary-text: #B0B3B8; /* Texto secundário com ótimo contraste */
+  --dark-bg: #121212;
+  --primary-surface: #242526;
+  --secondary-surface: #3A3B3C;
+  --primary-accent: #4FD1C5;
+  --primary-text: #E4E6EB;
+  --secondary-text: #B0B3B8;
   --border-color: #4A4A4A;
   --error-color: #e57373;
+  --error-text: #ffffff;
   --success-color: #81c784;
-
-  --button-color: var(--primary-surface); 
-  --hover-color: #4FD1C5; /* Versão mais escura do acento para hover */
+  --success-text: #ffffff;
+  --delete-hover-bg: #e53935;
+  --delete-hover-icon: #ffffff;
 }
 
 .light {
-  --dark-bg:  #F4F7FC;
+  --dark-bg: #F4F7FC;
   --primary-surface: #FFFFFF;
-  --secondary-surface: #E4E6EB;
-  --primary-accent:#17A2B8;
-  --primary-text: #1c1e21;
-  --secondary-text: #65676b;
-  --border-color: #ced0d4;
+  --secondary-surface: #E9ECEF;
+  --primary-accent: #17A2B8;
+  --primary-text: #212529;
+  --secondary-text: #6C757D;
+  --border-color: #DEE2E6;
   --error-color: #e57373;
-  --success-color: #81c784;
-
-  --button-color: var(--primary-surface);
-  --hover-color: #008AC7;
+  --error-text: #ffffff;
+  --success-color: #4caf50;
+  --success-text: #ffffff;
+  --delete-hover-bg: #e53935;
+  --delete-hover-icon: #ffffff;
 }
 
 .gerenciar-base-container {
@@ -43,7 +38,7 @@
   max-width: 800px;
   margin: 2rem auto;
   padding: 2rem;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  font-family: 'Poppins', sans-serif;
 }
 
 .drag-drop-area {
@@ -60,13 +55,18 @@
   transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
 }
 
-.drag-drop-area:hover,
-.drag-drop-area.dragging {
+.drag-drop-area.disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.drag-drop-area:hover:not(.disabled),
+.drag-drop-area.dragging:not(.disabled) {
   background-color: var(--secondary-surface);
   border-color: var(--primary-accent);
 }
 
-.drag-drop-area .upload-icon {
+.upload-icon {
   font-size: 3rem;
   color: var(--primary-accent);
   margin-bottom: 1rem;
@@ -75,6 +75,7 @@
 .drag-drop-area h2 {
   margin: 0;
   font-size: 1.5rem;
+  font-weight: 500;
   color: var(--primary-text);
 }
 
@@ -97,12 +98,12 @@
 }
 
 .message.success {
-  color: #1e1e1e;
+  color: var(--success-text);
   background-color: var(--success-color);
 }
 
 .message.error {
-  color: #1e1e1e;
+  color: var(--error-text);
   background-color: var(--error-color);
 }
 
@@ -115,38 +116,199 @@
 
 .file-item {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  background-color: var(--button-color);
+  gap: 1.5rem;
+  background-color: var(--primary-surface);
   padding: 1rem 1.5rem;
-  border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
 .file-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  border-color: var(--primary-accent);
+}
+
+.file-item.uploading {
+  border-color: var(--primary-accent);
+  pointer-events: none; /* Impede cliques no card durante o upload */
+}
+
+.file-item.uploading .file-details,
+.file-item.uploading .file-icon-wrapper {
+  opacity: 0.5;
+}
+
+
+.file-icon-wrapper {
+  color: var(--primary-accent);
+  flex-shrink: 0;
+}
+
+.file-icon-pdf {
+  font-size: 2rem;
+}
+
+.file-details {
+  flex-grow: 1;
+  min-width: 0;
+  transition: opacity 0.3s ease;
+}
+
+.file-name {
+  display: block;
+  font-weight: 500;
+  color: var(--primary-text);
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-bottom: 0.5rem;
+  transition: color 0.2s ease;
+}
+
+.file-name:hover {
+  color: var(--primary-accent);
+}
+
+.file-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-size: 0.85rem;
+  color: var(--secondary-text);
+}
+
+.file-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.file-actions {
+  flex-shrink: 0;
+  min-width: 200px; /* Garante espaço para o loader */
+  display: flex;
+  justify-content: flex-end;
+}
+
+.delete-button {
+  background: transparent;
+  border: none;
+  color: var(--secondary-text);
+  padding: 0.5rem;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+.delete-button:hover:not(:disabled) {
+  background-color: var(--delete-hover-bg);
+  color: var(--delete-hover-icon);
+}
+
+.delete-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.upload-button {
+  background-color: var(--primary-accent);
+  color: #121212;
+  font-weight: 500;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.upload-button:hover {
+  opacity: 0.85;
+}
+
+/* === ANIMAÇÃO DE UPLOAD === */
+.upload-in-progress {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--secondary-surface);
+  border-top-color: var(--primary-accent);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.upload-status-text p {
+  margin: 0;
+  font-weight: 500;
+  color: var(--primary-text);
+}
+.upload-status-text span {
+  font-size: 0.8rem;
+  color: var(--secondary-text);
 }
 
 
 .loading-text {
-    text-align: center;
-    color: var(--gb-text-secondary);
-    margin-top: 1rem;
+  text-align: center;
+  color: var(--secondary-text);
+  margin-top: 1rem;
+  font-style: italic;
 }
 
-.upload-button {
-  
-  border: none;
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 2rem;
+  gap: 1rem;
+}
+
+.pagination-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
   padding: 0.5rem 1rem;
-  border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background-color: var(--primary-surface);
+  color: var(--primary-text);
+  border-radius: 8px;
   cursor: pointer;
-  font-weight: 600;
-  transition: background-color 0.2s ease;
+  transition: background-color 0.2s, color 0.2s;
 }
 
-.upload-button:hover {
-  background-color: var(--hover-color);
+.pagination-button:hover:not(:disabled) {
+  background-color: var(--primary-accent);
+  color: #121212;
+  border-color: var(--primary-accent);
 }
 
+.pagination-button:disabled {
+  color: var(--secondary-text);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.pagination-info {
+  color: var(--secondary-text);
+  font-weight: 500;
+}
