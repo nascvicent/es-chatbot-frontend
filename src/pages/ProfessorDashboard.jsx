@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/Dashboard.css';
-import { BarChart2, BookOpen, Download, Home, Database, Moon, Sun, Menu } from 'lucide-react';
-import logo from "../assets/upelogobased.png";
+import { BarChart2, BookOpen, Download, Home, Database, Moon, Sun, Menu, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import UserImg from "../assets/user.png"; // Usado como imagem padrão/fallback
 import {
   BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer
@@ -43,6 +43,8 @@ const menuItems = [
 
 
 function ProfessorDashboard() {
+  const navigate = useNavigate();
+  
   // Estados do componente
   const [theme, setTheme] = useState('dark');
   const [activeSection, setActiveSection] = useState('painel');
@@ -85,6 +87,11 @@ function ProfessorDashboard() {
   // Função para trocar o tema
   const toggleTheme = () => {
     setTheme(prev => (prev === 'dark' ? 'light' : 'dark'));
+  };
+
+  // Função para voltar ao chat
+  const handleBackToChat = () => {
+    navigate('/chat');
   };
 
   // Função para trocar de seção e fechar o menu no mobile
@@ -149,7 +156,7 @@ function ProfessorDashboard() {
     <div className={`admin-dashboard ${theme}`}>
       <aside className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
         <div className="profile-section">
-          <img src={logo} alt="UPE Logo" className="profile-pic" />
+          <div className="logo-text">ChatEdu</div>
         </div>
         <ul className="nav-menu">
           {menuItems.map(item => (
@@ -168,10 +175,16 @@ function ProfessorDashboard() {
             <button className="hamburger-btn" onClick={() => setIsSidebarOpen(true)}>
               <Menu size={24} />
             </button>
-            <h2>{menuItems.find(m => m.key === activeSection)?.label}</h2>
           </div>
           <div className="header-controls">
-            <button onClick={toggleTheme} className="theme-toggle-button">
+            <button 
+              onClick={handleBackToChat} 
+              className="back-to-chat-button" 
+              title="Voltar ao Chat"
+            >
+              <MessageCircle size={20} />
+            </button>
+            <button onClick={toggleTheme} className="theme-toggle-button" title={theme === 'dark' ? 'Trocar para modo claro' : 'Trocar para modo escuro'}>
               {theme === 'dark' ? <Sun size={20} /> : <Moon size={20} />}
             </button>
             <div className="profile-info">
