@@ -1,21 +1,14 @@
 import React from 'react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div style={{
-        backgroundColor: 'var(--tooltip-bg, #333)',
-        color: 'var(--tooltip-text, #fff)',
-        padding: '8px 12px',
-        borderRadius: '4px',
-        border: '1px solid var(--border-color, #666)',
-        fontSize: '0.9em'
-      }}>
-        <p style={{ margin: 0, fontWeight: 'bold' }}>{label}</p>
+      <div className="estatisticas-tooltip">
+        <p className="estatisticas-tooltip-label">{label}</p>
         {payload.map((entry, index) => (
-          <p key={index} style={{ margin: '4px 0 0 0', color: entry.color }}>
-            {entry.name}: {entry.value}
+          <p key={index} className="estatisticas-tooltip-value" style={{ color: entry.color }}>
+            <strong>{entry.value}</strong> {entry.name === 'messages' ? 'mensagens' : entry.name}
           </p>
         ))}
       </div>
@@ -24,198 +17,206 @@ const CustomTooltip = ({ active, payload, label }) => {
   return null;
 };
 
-const COLORS = ['#8884d8', '#82ca9d', '#ffc658', '#ff7c7c', '#8dd1e1', '#d084d0', '#ffb347', '#87ceeb'];
+const COLORS = ['#4285f4', '#34a853', '#fbbc04', '#ea4335', '#9aa0a6', '#673ab7', '#e91e63', '#00bcd4'];
 
 export default function Estatisticas({ statsData, anonymousQuestionsStats, topTopics }) {
-  // Processar dados das dúvidas anônimas para o gráfico de pizza
+  // Process anonymous questions data for pie chart - show all items
   const anonymousQuestionsPieData = anonymousQuestionsStats?.slice(0, 8).map((item, index) => ({
     name: item.topic,
     value: item.question_count,
     latestDate: item.latest_question_date
   })) || [];
 
-  // Processar dados dos tópicos mais comuns para gráfico de barras
-  const topTopicsBarData = topTopics?.slice(0, 10).map(topic => ({
-    name: topic.length > 15 ? topic.substring(0, 15) + '...' : topic,
-    fullName: topic,
-    count: 1 // Como só temos os nomes, usamos 1 como placeholder
-  })) || [];
+  // Process most discussed topics - show all items
+  const filteredTopTopics = statsData?.top_topics?.filter(topic => 
+    topic && 
+    topic.topic && 
+    typeof topic.messages === 'number'
+  ).slice(0, 10) // Limit to 10 most relevant topics for cleaner view
+    .sort((a, b) => b.messages - a.messages) || [];
+
+  // Show all anonymous questions stats
+  const filteredAnonymousStats = anonymousQuestionsStats || [];
+
+  // Format numbers with Brazilian locale
+  const formatNumber = (num) => {
+    if (!num) return '0';
+    return num.toLocaleString('pt-BR');
+  };
 
   return (
-    <div style={{ padding: '0' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-        <h2>Estatísticas Detalhadas</h2>
+    <div className="estatisticas-container">
+      <div className="estatisticas-header">
+        <h2 className="estatisticas-title">Estatísticas</h2>
         {statsData?.period && (
-          <div style={{ fontSize: '0.9em', opacity: 0.7 }}>
-            <span>{statsData.period}</span>
-            {statsData.timezone && <span> • {statsData.timezone}</span>}
+          <div className="estatisticas-period-info">
+            {statsData.period}
+            {statsData.timezone && ` • ${statsData.timezone}`}
           </div>
         )}
       </div>
 
-      {/* Resumo Geral */}
+      {/* General Summary */}
       {statsData && (
-        <section style={{ marginBottom: '32px' }}>
-          <h3 style={{ marginBottom: '16px' }}>Resumo Geral</h3>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-            gap: '16px' 
-          }}>
-            <div style={{ 
-              padding: '20px', 
-              backgroundColor: 'var(--card-bg)', 
-              borderRadius: '8px', 
-              border: '1px solid var(--border-color)',
-              textAlign: 'center'
-            }}>
-              <h4 style={{ margin: '0 0 8px 0', color: 'var(--primary-color)' }}>
-                {statsData.totals.messages?.toLocaleString('pt-BR')}
-              </h4>
-              <p style={{ margin: 0, fontSize: '0.9em' }}>Total de Mensagens</p>
+        <section className="estatisticas-section">
+          <h3 className="estatisticas-section-title">Resumo Geral</h3>
+          <div className="resumo-geral-grid">
+            <div className="resumo-card">
+              <div className="resumo-card-value">
+                {formatNumber(statsData.totals.messages)}
+              </div>
+              <p className="resumo-card-label">Total de Mensagens</p>
             </div>
-            <div style={{ 
-              padding: '20px', 
-              backgroundColor: 'var(--card-bg)', 
-              borderRadius: '8px', 
-              border: '1px solid var(--border-color)',
-              textAlign: 'center'
-            }}>
-              <h4 style={{ margin: '0 0 8px 0', color: 'var(--primary-color)' }}>
-                {statsData.totals.questions?.toLocaleString('pt-BR')}
-              </h4>
-              <p style={{ margin: 0, fontSize: '0.9em' }}>Perguntas Feitas</p>
+            <div className="resumo-card">
+              <div className="resumo-card-value">
+                {formatNumber(statsData.totals.questions)}
+              </div>
+              <p className="resumo-card-label">Perguntas Feitas</p>
             </div>
-            <div style={{ 
-              padding: '20px', 
-              backgroundColor: 'var(--card-bg)', 
-              borderRadius: '8px', 
-              border: '1px solid var(--border-color)',
-              textAlign: 'center'
-            }}>
-              <h4 style={{ margin: '0 0 8px 0', color: 'var(--primary-color)' }}>
-                {statsData.totals.users?.toLocaleString('pt-BR')}
-              </h4>
-              <p style={{ margin: 0, fontSize: '0.9em' }}>Usuários Únicos</p>
+            <div className="resumo-card">
+              <div className="resumo-card-value">
+                {formatNumber(statsData.totals.users)}
+              </div>
+              <p className="resumo-card-label">Usuários Únicos</p>
             </div>
-            <div style={{ 
-              padding: '20px', 
-              backgroundColor: 'var(--card-bg)', 
-              borderRadius: '8px', 
-              border: '1px solid var(--border-color)',
-              textAlign: 'center'
-            }}>
-              <h4 style={{ margin: '0 0 8px 0', color: 'var(--primary-color)' }}>
+            <div className="resumo-card">
+              <div className="resumo-card-value">
                 {statsData.totals.avg_response_time_ms 
                   ? `${(statsData.totals.avg_response_time_ms / 1000).toFixed(1)}s`
                   : '0s'
                 }
-              </h4>
-              <p style={{ margin: 0, fontSize: '0.9em' }}>Tempo Médio de Resposta</p>
+              </div>
+              <p className="resumo-card-label">Tempo Médio de Resposta</p>
             </div>
           </div>
         </section>
       )}
 
-      {/* Horários de Pico */}
+      {/* Peak Hours */}
       {statsData?.peak_usage && (
-        <section style={{ marginBottom: '32px' }}>
-          <h3 style={{ marginBottom: '16px' }}>Horários de Maior Atividade</h3>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', 
-            gap: '16px' 
-          }}>
-            <div style={{ 
-              padding: '20px', 
-              backgroundColor: 'var(--card-bg)', 
-              borderRadius: '8px', 
-              border: '1px solid var(--border-color)'
-            }}>
-              <h4 style={{ margin: '0 0 12px 0' }}>Horário de Pico</h4>
-              <div style={{ fontSize: '1.5em', fontWeight: 'bold', color: 'var(--primary-color)', marginBottom: '8px' }}>
+        <section className="estatisticas-section">
+          <h3 className="estatisticas-section-title">Horários de Maior Atividade</h3>
+          <div className="horarios-pico-grid">
+            <div className="pico-card">
+              <h4 className="pico-card-title">Horário de Pico</h4>
+              <div className="pico-card-value">
                 {statsData.peak_usage.hour.hour}h
               </div>
-              <p style={{ margin: '0 0 8px 0', fontSize: '0.9em' }}>
+              <p className="pico-card-period">
                 {statsData.peak_usage.hour.period}
               </p>
-              <p style={{ margin: 0, fontSize: '0.8em', opacity: 0.7 }}>
-                {statsData.peak_usage.hour.messages} mensagens
+              <p className="pico-card-count">
+                {formatNumber(statsData.peak_usage.hour.messages)} mensagens
               </p>
             </div>
-            <div style={{ 
-              padding: '20px', 
-              backgroundColor: 'var(--card-bg)', 
-              borderRadius: '8px', 
-              border: '1px solid var(--border-color)'
-            }}>
-              <h4 style={{ margin: '0 0 12px 0' }}>Dia de Maior Uso</h4>
-              <div style={{ fontSize: '1.5em', fontWeight: 'bold', color: 'var(--primary-color)', marginBottom: '8px' }}>
+            <div className="pico-card">
+              <h4 className="pico-card-title">Dia de Maior Uso</h4>
+              <div className="pico-card-value">
                 {statsData.peak_usage.day.day}
               </div>
-              <p style={{ margin: 0, fontSize: '0.8em', opacity: 0.7 }}>
-                {statsData.peak_usage.day.messages} mensagens
+              <p className="pico-card-count">
+                {formatNumber(statsData.peak_usage.day.messages)} mensagens
               </p>
             </div>
           </div>
         </section>
       )}
 
-      {/* Gráfico de Tópicos Mais Discutidos */}
-      {statsData?.top_topics && statsData.top_topics.length > 0 && (
-        <section style={{ marginBottom: '32px' }}>
-          <h3 style={{ marginBottom: '16px' }}>Tópicos Mais Discutidos</h3>
-          <div style={{ 
-            backgroundColor: 'var(--card-bg)', 
-            borderRadius: '8px', 
-            border: '1px solid var(--border-color)',
-            padding: '20px'
-          }}>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={statsData.top_topics} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" className="chart-grid" />
+      {/* Topics Chart from Anonymous Questions */}
+      {filteredAnonymousStats.length > 0 && (
+        <section className="estatisticas-section">
+          <h3 className="estatisticas-section-title">
+            Tópicos das Dúvidas Anônimas
+            <span style={{ fontSize: '0.8em', opacity: 0.6, fontWeight: 'normal', marginLeft: '8px' }}>
+              • Todos os tópicos
+            </span>
+          </h3>
+          <div className="grafico-container">
+            <ResponsiveContainer width="100%" height={350}>
+              <BarChart 
+                data={filteredAnonymousStats.map((item, index) => ({
+                  name: `Tópico ${index + 1}`,
+                  fullName: item.topic,
+                  uso: item.question_count,
+                  latestDate: item.latest_question_date
+                }))} 
+                margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" stroke="var(--border-color)" opacity={0.3} />
                 <XAxis 
-                  dataKey="topic" 
-                  className="chart-axis-text"
+                  dataKey="name" 
+                  tick={{ fontSize: 11, fill: 'var(--text-secondary)' }}
                   angle={-45}
                   textAnchor="end"
-                  height={100}
+                  height={60}
+                  axisLine={false}
+                  tickLine={false}
                 />
-                <YAxis className="chart-axis-text" />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="messages" fill="var(--primary-color)" radius={[4, 4, 0, 0]} />
+                <YAxis 
+                  tick={{ fontSize: 12, fill: 'var(--text-secondary)' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip 
+                  cursor={{ fill: 'rgba(66, 133, 244, 0.1)' }}
+                  content={({ active, payload, label }) => {
+                    if (active && payload && payload.length) {
+                      const data = payload[0].payload;
+                      return (
+                        <div className="estatisticas-tooltip">
+                          <p className="estatisticas-tooltip-label" style={{ fontWeight: 'bold', marginBottom: '8px' }}>
+                            {data.fullName || label}
+                          </p>
+                          <p className="estatisticas-tooltip-value">
+                            <strong>{payload[0].value}</strong> {payload[0].value === 1 ? 'pergunta' : 'perguntas'}
+                          </p>
+                          {data.latestDate && (
+                            <p className="estatisticas-tooltip-value" style={{ fontSize: '0.9em', opacity: 0.8 }}>
+                              Última: {new Date(data.latestDate).toLocaleDateString('pt-BR')}
+                            </p>
+                          )}
+                          {payload[0].value === 0 && (
+                            <p className="estatisticas-tooltip-value" style={{ fontSize: '0.9em', opacity: 0.8, fontStyle: 'italic' }}>
+                              Nenhuma pergunta registrada
+                            </p>
+                          )}
+                        </div>
+                      );
+                    }
+                    return null;
+                  }}
+                />
+                <Bar 
+                  dataKey="uso" 
+                  fill="var(--primary-color)" 
+                  radius={[3, 3, 0, 0]}
+                  maxBarSize={50}
+                />
               </BarChart>
             </ResponsiveContainer>
           </div>
         </section>
       )}
 
-      {/* Estatísticas de Dúvidas Anônimas */}
-      {anonymousQuestionsStats && anonymousQuestionsStats.length > 0 && (
-        <section style={{ marginBottom: '32px' }}>
-          <h3 style={{ marginBottom: '16px' }}>Dúvidas Anônimas por Tópico</h3>
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', 
-            gap: '24px' 
-          }}>
-            {/* Gráfico de Pizza */}
-            <div style={{ 
-              backgroundColor: 'var(--card-bg)', 
-              borderRadius: '8px', 
-              border: '1px solid var(--border-color)',
-              padding: '20px'
-            }}>
-              <h4 style={{ marginBottom: '16px' }}>Distribuição por Tópico</h4>
-              <ResponsiveContainer width="100%" height={300}>
+      {/* Anonymous Questions Statistics */}
+      {filteredAnonymousStats.length > 0 && (
+        <section className="estatisticas-section">
+          <h3 className="estatisticas-section-title">Dúvidas Anônimas por Tópico</h3>
+          <div className="duvidas-anonimas-grid">
+            {/* Pie Chart */}
+            <div className="grafico-container">
+              <h4>Distribuição por Tópico</h4>
+              <ResponsiveContainer width="100%" height={280}>
                 <PieChart>
                   <Pie
                     data={anonymousQuestionsPieData}
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, value }) => value > 0 ? `${name}: ${value}` : ''}
-                    outerRadius={80}
+                    label={({ name, value, percent }) => 
+                      percent > 3 ? `${name}: ${value}` : ''
+                    }
+                    outerRadius={90}
                     fill="#8884d8"
                     dataKey="value"
                   >
@@ -228,40 +229,26 @@ export default function Estatisticas({ statsData, anonymousQuestionsStats, topTo
               </ResponsiveContainer>
             </div>
 
-            {/* Lista de Estatísticas */}
-            <div style={{ 
-              backgroundColor: 'var(--card-bg)', 
-              borderRadius: '8px', 
-              border: '1px solid var(--border-color)',
-              padding: '20px'
-            }}>
-              <h4 style={{ marginBottom: '16px' }}>Detalhes dos Tópicos</h4>
-              <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
-                {anonymousQuestionsStats.map((item, index) => (
-                  <div 
-                    key={index} 
-                    style={{ 
-                      padding: '12px 0', 
-                      borderBottom: index < anonymousQuestionsStats.length - 1 ? '1px solid var(--border-color)' : 'none',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
-                    }}
-                  >
-                    <div>
-                      <div style={{ fontWeight: '500', marginBottom: '4px' }}>{item.topic}</div>
-                      <div style={{ fontSize: '0.8em', opacity: 0.7 }}>
+            {/* Statistics List */}
+            <div className="grafico-container">
+              <h4>Detalhes dos Tópicos</h4>
+              <div className="duvidas-lista">
+                {filteredAnonymousStats.map((item, index) => (
+                  <div key={index} className="duvida-item">
+                    <div className="duvida-info">
+                      <div className="duvida-topic">{item.topic}</div>
+                      <div className="duvida-date">
                         {item.latest_question_date 
                           ? `Última pergunta: ${new Date(item.latest_question_date).toLocaleDateString('pt-BR')}`
-                          : 'Nenhuma pergunta ainda'
+                          : 'Nenhuma pergunta registrada'
                         }
                       </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                      <div style={{ fontWeight: 'bold', color: 'var(--primary-color)' }}>
+                    <div className="duvida-stats">
+                      <div className="duvida-count">
                         {item.question_count}
                       </div>
-                      <div style={{ fontSize: '0.8em', opacity: 0.7 }}>
+                      <div className="duvida-count-label">
                         {item.question_count === 1 ? 'pergunta' : 'perguntas'}
                       </div>
                     </div>
@@ -273,31 +260,19 @@ export default function Estatisticas({ statsData, anonymousQuestionsStats, topTo
         </section>
       )}
 
-      {/* Lista de Temas Mais Comuns */}
+      {/* Most Common Topics List */}
       {topTopics && topTopics.length > 0 && (
-        <section>
-          <h3 style={{ marginBottom: '16px' }}>Temas Mais Comuns nas Conversas</h3>
-          <div style={{ 
-            backgroundColor: 'var(--card-bg)', 
-            borderRadius: '8px', 
-            border: '1px solid var(--border-color)',
-            padding: '20px'
-          }}>
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', 
-              gap: '12px' 
-            }}>
-              {topTopics.map((topic, index) => (
+        <section className="estatisticas-section">
+          <h3 className="estatisticas-section-title">Temas Mais Comuns</h3>
+          <div className="grafico-container">
+            <div className="temas-comuns-grid">
+              {topTopics.slice(0, 12).map((topic, index) => (
                 <div 
                   key={index}
+                  className="tema-tag"
                   style={{
-                    padding: '8px 12px',
-                    backgroundColor: `${COLORS[index % COLORS.length]}20`,
-                    border: `1px solid ${COLORS[index % COLORS.length]}`,
-                    borderRadius: '6px',
-                    textAlign: 'center',
-                    fontSize: '0.9em'
+                    backgroundColor: `${COLORS[index % COLORS.length]}15`,
+                    borderColor: `${COLORS[index % COLORS.length]}40`,
                   }}
                 >
                   {topic}
@@ -308,18 +283,10 @@ export default function Estatisticas({ statsData, anonymousQuestionsStats, topTo
         </section>
       )}
 
-      {/* Mensagem quando não há dados */}
-      {(!statsData && !anonymousQuestionsStats?.length && !topTopics?.length) && (
-        <div style={{ 
-          textAlign: 'center', 
-          padding: '40px', 
-          backgroundColor: 'var(--card-bg)', 
-          borderRadius: '8px',
-          border: '1px solid var(--border-color)'
-        }}>
-          <p style={{ margin: 0, opacity: 0.7 }}>
-            Nenhum dado de estatísticas disponível no momento.
-          </p>
+      {/* Empty state message */}
+      {(!statsData && !filteredAnonymousStats?.length && !topTopics?.length) && (
+        <div className="estatisticas-empty">
+          <p>Nenhum dado disponível no momento</p>
         </div>
       )}
     </div>

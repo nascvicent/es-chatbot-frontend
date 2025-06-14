@@ -3,41 +3,11 @@ import '../styles/Dashboard.css';
 import { BarChart2, BookOpen, Download, Home, Database, Moon, Sun, Menu, MessageCircle, Loader } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import UserImg from "../assets/user.png"; // Usado como imagem padrão/fallback
-import {
-  BarChart, Bar, XAxis, YAxis, Tooltip, CartesianGrid, ResponsiveContainer
-} from 'recharts';
 
 // Seus outros componentes
 import DuvidasFrequentes from '../components/DuvidasFrequentes';
 import GerenciarBase from '../components/GerenciarBase';
 import Estatisticas from '../components/Estatisticas';
-import ExportarDados from '../components/ExportarDados';
-
-// Componente para o tooltip customizado do gráfico
-const CustomTooltip = ({ active, payload, label }) => {
-  if (active && payload && payload.length) {
-    const data = payload[0].payload;
-    return (
-      <div className="custom-tooltip">
-        <p className="label" style={{ fontWeight: 'bold', marginBottom: '8px' }}>
-          {data.fullName || label}
-        </p>
-        <p className="intro">{`Perguntas: ${payload[0].value}`}</p>
-        {data.latestDate && (
-          <p className="intro" style={{ fontSize: '0.9em', opacity: 0.8 }}>
-            {`Última pergunta: ${new Date(data.latestDate).toLocaleDateString('pt-BR')}`}
-          </p>
-        )}
-        {payload[0].value === 0 && (
-          <p className="intro" style={{ fontSize: '0.9em', opacity: 0.8, fontStyle: 'italic' }}>
-            Nenhuma pergunta ainda
-          </p>
-        )}
-      </div>
-    );
-  }
-  return null;
-};
 
 // Itens do menu da barra lateral
 const menuItems = [
@@ -45,7 +15,6 @@ const menuItems = [
   { key: 'duvidas', label: 'Dúvidas Frequentes', icon: <BookOpen size={18} /> },
   { key: 'base', label: 'Gerenciar Base', icon: <Database size={18} /> },
   { key: 'estatisticas', label: 'Estatísticas', icon: <BarChart2 size={18} /> },
-  { key: 'exportar', label: 'Exportar Dados', icon: <Download size={18} /> },
 ];
 
 function ProfessorDashboard() {
@@ -64,7 +33,6 @@ function ProfessorDashboard() {
   const [topTopics, setTopTopics] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [chartData, setChartData] = useState([]);
 
   // Função para obter o token do localStorage (assumindo que está armazenado lá)
   const getAuthToken = () => {
@@ -111,19 +79,6 @@ function ProfessorDashboard() {
     try {
       const data = await fetchWithAuth(`${API_URL}/anonymous-questions/stats`);
       setAnonymousQuestionsStats(data);
-      
-      // Processar dados das dúvidas anônimas para o gráfico
-      if (data && data.length > 0) {
-        // Ordenar por quantidade de perguntas (maior para menor)
-        const sortedData = [...data].sort((a, b) => b.question_count - a.question_count);
-        const chartData = sortedData.map((item, index) => ({
-          name: `Tópico ${index + 1}`, // Nome genérico para o gráfico
-          fullName: item.topic,
-          uso: item.question_count,
-          latestDate: item.latest_question_date
-        }));
-        setChartData(chartData);
-      }
     } catch (error) {
       console.error('Erro ao buscar estatísticas de dúvidas anônimas:', error);
       setError(prev => prev || 'Erro ao carregar estatísticas de dúvidas');
@@ -259,8 +214,6 @@ function ProfessorDashboard() {
         return <GerenciarBase />;
       case 'estatisticas':
         return <Estatisticas statsData={statsData} anonymousQuestionsStats={anonymousQuestionsStats} topTopics={topTopics} />;
-      case 'exportar':
-        return <ExportarDados />;
       case 'painel':
       default:
         return (
@@ -294,7 +247,7 @@ function ProfessorDashboard() {
             </section>
 
             {/* Informações de horário de pico */}
-            {statsData?.peak_usage && (
+            {statsData?.peak_usage?.hour && statsData?.peak_usage?.day && (
               <section className="peak-usage-info" style={{ marginBottom: '24px' }}>
                 <div className="info-cards" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
                   <div className="info-card" style={{ padding: '16px', backgroundColor: 'var(--card-bg)', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
@@ -314,47 +267,6 @@ function ProfessorDashboard() {
                 </div>
               </section>
             )}
-
-            <section className="charts">
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                <h3>Tópicos das Dúvidas Anônimas</h3>
-                <small style={{ opacity: 0.7 }}>
-                  {chartData.length > 0 ? `${chartData.length} tópicos` : 'Carregando...'} • Ordenado por quantidade
-                </small>
-              </div>
-              {chartData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={400}>
-                  <BarChart 
-                    data={chartData} 
-                    margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" className="chart-grid" />
-                    <XAxis 
-                      dataKey="name" 
-                      className="chart-axis-text"
-                      tick={{ fontSize: 10 }}
-                      angle={-45}
-                      textAnchor="end"
-                      height={60}
-                    />
-                    <YAxis className="chart-axis-text" />
-                    <Tooltip cursor={{ fill: 'var(--chart-tooltip-cursor-bg)' }} content={<CustomTooltip />} />
-                    <Bar 
-                      dataKey="uso" 
-                      fill="var(--primary-color)" 
-                      radius={[4, 4, 0, 0]}
-                      onMouseEnter={(data, index) => {
-                        // Pode adicionar efeitos visuais aqui se necessário
-                      }}
-                    />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '40px', opacity: 0.7 }}>
-                  <p>Nenhum dado de tópico disponível</p>
-                </div>
-              )}
-            </section>
           </>
         );
     }
