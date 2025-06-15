@@ -43,6 +43,16 @@ const TypingIndicator = () => (
   </div>
 );
 
+// --- Componente de Indicador de Busca de Documentos ---
+const DocumentSearchIndicator = () => (
+  <div className="document-search-indicator">
+    <div className="search-spinner">
+      <div className="spinner-ring"></div>
+    </div>
+    <span className="search-text">Procurando documentos relevantes...</span>
+  </div>
+);
+
 // --- Componente de Bloco de Código ---
 const CodeBlock = ({ children, className, ...props }) => {
   const [copied, setCopied] = useState(false);
@@ -336,6 +346,7 @@ function ChatPage() {
   const [activeChatId, setActiveChatId] = useState(null);
   const [isSidebarVisible, setIsSidebarVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSearchingDocuments, setIsSearchingDocuments] = useState(false);
   const [isProcessingChatAction, setIsProcessingChatAction] = useState(false);
   const [hasLoadedInitialChats, setHasLoadedInitialChats] = useState(false);
   const [userName, setUserName] = useState("Usuário");
@@ -526,6 +537,7 @@ function ChatPage() {
       }
     }));
 
+    setIsSearchingDocuments(true);
     setIsLoading(true);
     let finalActiveChatId = activeChatId; 
 
@@ -596,6 +608,9 @@ function ChatPage() {
       let streamDone = false;
       let currentBotMessageLength = 0; 
 
+      // Quando o streaming começar, pare de mostrar "procurando documentos"
+      setIsSearchingDocuments(false);
+
       while (!streamDone) {
         const { value, done } = await reader.read();
         if (done) { streamDone = true; break; }
@@ -644,6 +659,7 @@ function ChatPage() {
       if (error.message.includes("401")) navigate('/', { replace: true });
     } finally {
       setIsLoading(false);
+      setIsSearchingDocuments(false);
       setConnectionStatus('connected');
     }
   };
@@ -896,7 +912,8 @@ function ChatPage() {
                     isLatest={index === currentChat.messages.length - 1}
                   />
                 ))}
-                {isLoading && <TypingIndicator />}
+                {isSearchingDocuments && <DocumentSearchIndicator />}
+                {isLoading && !isSearchingDocuments && <TypingIndicator />}
                 <div ref={chatMessagesEndRef} />
               </div>
             )
