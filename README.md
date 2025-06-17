@@ -1,12 +1,50 @@
-# React + Vite
+# 🤖 ChatBot Front-End POLI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Interface web para um ChatBot desenvolvida com [Vite](https://vitejs.dev/) e [React](https://reactjs.org/). Este projeto é responsável pela interface de conversação com o usuário, integrando-se a uma API de backend para envio e recebimento de mensagens especialmente para alunos da POLI! Aproveite.
 
-Currently, two official plugins are available:
+## 🚀 Tecnologias Utilizadas
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- [Vite](https://vitejs.dev/) — Ferramenta de build e dev server super rápida
+- [React](https://reactjs.org/) — Biblioteca para construção de interfaces de usuário
+- React Hooks — `useState`, `useEffect`, entre outros
+- JSX Syntax — Sintaxe para escrever HTML dentro do JavaScript
+- CSS Modules 
+- Fetch API — Para comunicação com o backend 
+- React Router DOM — Para navegação entre páginas
+- React Markdown — Para renderização segura de conteúdo em Markdown
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+
+## 🔧 Como Rodar Localmente
+
+1. Clone o repositório:
+   ```bash
+   git clone https://github.com/seuusuario/chatbot-frontend.git
+   cd chatbot-frontend
+
+2. Instale as dependências:
+
+npm install
+
+3. Rode o servidor de desenvolvimento:
+
+npm run dev
+
+4. Acesse no navegador:
+
+http://localhost:5173
+
+📦 Build de Produção
+npm run build
+Os arquivos otimizados ficarão na pasta dist/.
+
+🧠 Sobre
+Este front-end foi criado com foco em simplicidade e responsividade, utilizando os principais recursos do React como:
+
+Componentes funcionais
+
+Hooks (useState, useEffect)
+
+Comunicação assíncrona com API
+
+Gerenciamento básico de estado local
