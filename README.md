@@ -36,7 +36,7 @@ http://localhost:5173
 
 📦 Build de Produção
 npm run build
-Os arquivos otimizados ficarão na pasta dist/.
+
 
 🧠 Sobre
 Este front-end foi criado com foco em simplicidade e responsividade, utilizando os principais recursos do React como:
